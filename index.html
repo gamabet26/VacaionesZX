@@ -314,6 +314,8 @@ body.dark label{color:#aaa}
   <div class="fr" style="margin-top:4px"><div><label>Descanso 2</label><select id="edit_desc2"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div><label>Días vacaciones</label><input id="edit_days" type="number"/></div></div>
   <div class="fr" style="margin-top:4px"><div><label>Días usados</label><input id="edit_used" type="number"/></div><div><label>Horas banco</label><input id="edit_horas" type="number" step="0.5"/></div></div>
   <div style="max-width:50%;margin-top:4px"><label>Horas usadas</label><input id="edit_horasU" type="number" step="0.5"/></div>
+  <div class="fr" style="margin-top:4px"><div><label>Fecha de ingreso</label><input id="edit_ingreso" type="date"/></div><div><label>Fecha de nacimiento</label><input id="edit_nacimiento" type="date"/></div></div>
+  <div id="edit_vac_preview" style="display:none;background:#E6F1FB;border-radius:8px;padding:8px 12px;margin-top:8px;font-size:13px;color:#185FA5"></div>
   <p id="editMsg" style="font-size:13px;margin:10px 0 0;display:none"></p>
   <div style="display:flex;gap:8px;margin-top:16px"><button class="btn-p" onclick="saveEditUser()" style="flex:1">Guardar cambios</button><button class="btn-l" onclick="closeModal('editModal')">Cancelar</button></div>
 </div></div>
@@ -339,8 +341,31 @@ async function sDel(t,f){await fetch(SB+'/rest/v1/'+t+'?'+f,{method:'DELETE',hea
 var CU=null,AU=[],AR=[],BH=[],PM=[],DF=[],aModal=null,aModalType='vac',editT=null,delT=null;
 var calY=new Date().getFullYear(),calM=new Date().getMonth(),filtAR=[];
 
-// EMAIL
-async function sendMail(toEmail,toName,asunto,mensaje,tipo,fechas,estatus){
+// TABLA DE VACACIONES POR ANTIGÜEDAD
+var VAC_TABLE=[
+  {anios:1,dias:12},{anios:2,dias:14},{anios:3,dias:16},{anios:4,dias:18},{anios:5,dias:20},
+  {anios:6,dias:22},{anios:7,dias:22},{anios:8,dias:22},{anios:9,dias:22},{anios:10,dias:22},
+  {anios:11,dias:24},{anios:12,dias:24},{anios:13,dias:24},{anios:14,dias:24},{anios:15,dias:24},
+  {anios:16,dias:26},{anios:17,dias:26},{anios:18,dias:26},{anios:19,dias:26},{anios:20,dias:26},
+  {anios:21,dias:28},{anios:22,dias:28},{anios:23,dias:28},{anios:24,dias:28},{anios:25,dias:28},
+  {anios:26,dias:30},{anios:27,dias:30},{anios:28,dias:30},{anios:29,dias:30},{anios:30,dias:30},
+  {anios:31,dias:32},{anios:32,dias:32},{anios:33,dias:32},{anios:34,dias:32},{anios:35,dias:32}
+];
+
+function getDiasVac(anios){
+  if(anios<1)return 0;
+  var row=VAC_TABLE.find(function(r){return r.anios===Math.min(anios,35);});
+  return row?row.dias:32;
+}
+
+function calcAniosIngreso(fechaIngreso){
+  if(!fechaIngreso)return 0;
+  var ingreso=new Date(fechaIngreso),hoy=new Date();
+  var anios=hoy.getFullYear()-ingreso.getFullYear();
+  var m=hoy.getMonth()-ingreso.getMonth();
+  if(m<0||(m===0&&hoy.getDate()<ingreso.getDate()))anios--;
+  return Math.max(0,anios);
+}(toEmail,toName,asunto,mensaje,tipo,fechas,estatus){
   if(!toEmail)return;
   try{
     await emailjs.send(EJ_SVC,EJ_TPL,{to_email:toEmail,to_name:toName,nombre:toName,asunto:asunto,mensaje:mensaje,tipo:tipo,fechas:fechas,estatus:estatus});
@@ -468,8 +493,11 @@ async function submitVac(){
   if(!from||!to){msg.style.color='#A32D2D';msg.textContent='Selecciona las fechas.';msg.style.display='block';return;}
   var d=diffDaysExcl(from,to,d1,d2);
   if(half)d=Math.max(0.5,d-0.5);
-  var avail=CU.days-CU.used;
-  if(d>avail){msg.style.color='#A32D2D';msg.textContent='Solo tienes '+avail+' días disponibles.';msg.style.display='block';return;}
+  var anios=calcAniosIngreso(CU.fecha_ingreso);
+  var diasCorresponden=getDiasVac(anios);
+  var avail=diasCorresponden-CU.used;
+  if(d>avail&&avail>=0){msg.style.color='#A32D2D';msg.textContent='Solo tienes '+avail+' días disponibles.';msg.style.display='block';return;}
+  if(avail<0){msg.style.color='#A32D2D';msg.textContent='Tu saldo está en negativo ('+avail+' días). Consulta a RRHH.';msg.style.display='block';return;}
   btn.textContent='Enviando...';btn.disabled=true;
   try{
     await sPost('requests',{user_id:CU.id,from_date:from,to_date:to,days:d,reason:'Vacaciones',status:'pending',created_at:new Date().toISOString().split('T')[0],comment:'',half_day:half});
@@ -627,9 +655,20 @@ async function handleAction(action){
 
 // DASHBOARD
 function renderDash(){
-  var avail=CU.days-CU.used,hAvail=(CU.horas_banco||12)-(CU.horas_usadas||0);
+  var anios=calcAniosIngreso(CU.fecha_ingreso);
+  var diasCorresponden=getDiasVac(anios);
+  var avail=diasCorresponden-CU.used;
+  var hAvail=(CU.horas_banco||12)-(CU.horas_usadas||0);
   document.getElementById('welcomeMsg').textContent='Bienvenido, '+CU.name.split(' ')[0];
-  document.getElementById('statsGrid').innerHTML=[{l:'Días vacaciones',v:avail,bg:'#EAF3DE',c:'#3B6D11'},{l:'Días usados',v:CU.used,bg:'#FAEEDA',c:'#854F0B'},{l:'Total asignados',v:CU.days,bg:'#E6F1FB',c:'#185FA5'},{l:'Horas banco',v:hAvail,bg:'#f1efe8',c:'#444'}].map(function(s){return'<div style="background:'+s.bg+';border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:'+s.c+';opacity:0.8;margin-bottom:4px">'+s.l+'</div><div style="font-size:26px;font-weight:500;color:'+s.c+'">'+s.v+'</div></div>';}).join('');
+  var stats=[
+    {l:'Días disponibles',v:avail,bg:avail<0?'#FCEBEB':'#EAF3DE',c:avail<0?'#A32D2D':'#3B6D11'},
+    {l:'Días usados',v:CU.used,bg:'#FAEEDA',c:'#854F0B'},
+    {l:'Días correspondientes',v:diasCorresponden,bg:'#E6F1FB',c:'#185FA5'},
+    {l:'Antigüedad',v:anios+' año'+(anios!==1?'s':''),bg:'#f1efe8',c:'#444'}
+  ];
+  document.getElementById('statsGrid').innerHTML=stats.map(function(s){
+    return'<div style="background:'+s.bg+';border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:'+s.c+';opacity:0.8;margin-bottom:4px">'+s.l+'</div><div style="font-size:26px;font-weight:500;color:'+s.c+'">'+(typeof s.v==='number'&&s.v<0?'<span style="color:#A32D2D;font-weight:700">'+s.v+'</span>':s.v)+'</div></div>';
+  }).join('');
   var myR=AR.filter(function(r){return r.user_id===CU.id;});
   if(CU.role!=='admin'){
     if(myR.length===0)document.getElementById('myRecentReqs').innerHTML='<p style="color:#888;font-size:13px">No tienes solicitudes. <a href="#" onclick="showView(\'vacaciones\');return false" style="color:#185FA5">Solicitar vacaciones</a></p>';
@@ -756,7 +795,13 @@ function switchAdminTab(t){
 }
 function renderAdminUsers(){
   var bossList=AU.filter(function(u){return u.role==='boss';});
-  document.getElementById('adminUsers').innerHTML=AU.map(function(u){return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center">'+avH(u.avatar,34)+'<div><div style="font-size:14px;font-weight:500">'+u.name+'</div><div style="font-size:12px;color:#888">'+u.user_name+' · '+u.dept+' · '+(u.planta||'Zubex Planta')+'</div></div></div><div style="display:flex;align-items:center;gap:6px"><div style="text-align:right;margin-right:4px"><span style="font-size:12px;background:#E6F1FB;color:#185FA5;border-radius:20px;padding:2px 8px">'+u.role+'</span><div style="font-size:12px;color:#888;margin-top:2px">'+(u.days-u.used)+'d · '+((u.horas_banco||12)-(u.horas_usadas||0))+'h</div></div><button class="btn-e" onclick="openEditModal('+u.id+')">Editar</button><button class="btn-de" onclick="openDeleteModal('+u.id+')">Eliminar</button></div></div></div>';}).join('')+
+  document.getElementById('adminUsers').innerHTML=AU.map(function(u){
+    var anios=calcAniosIngreso(u.fecha_ingreso);
+    var diasC=getDiasVac(anios);
+    var saldo=diasC-u.used;
+    var saldoColor=saldo<0?'#A32D2D':'#888';
+    return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center">'+avH(u.avatar,34)+'<div><div style="font-size:14px;font-weight:500">'+u.name+'</div><div style="font-size:12px;color:#888">'+u.user_name+' · '+u.dept+' · '+(u.planta||'Zubex Planta')+'</div><div style="font-size:12px;color:#888">'+(u.fecha_ingreso?'Ingreso: '+u.fecha_ingreso+' · '+anios+' año'+(anios!==1?'s':''):'')+' '+(u.fecha_nacimiento?'· Cumple: '+u.fecha_nacimiento:'')+'</div></div></div><div style="display:flex;align-items:center;gap:6px"><div style="text-align:right;margin-right:4px"><span style="font-size:12px;background:#E6F1FB;color:#185FA5;border-radius:20px;padding:2px 8px">'+u.role+'</span><div style="font-size:12px;color:'+saldoColor+';margin-top:2px;font-weight:'+(saldo<0?700:400)+'">'+saldo+'d / '+((u.horas_banco||12)-(u.horas_usadas||0))+'h</div></div><button class="btn-e" onclick="openEditModal('+u.id+')">Editar</button><button class="btn-de" onclick="openDeleteModal('+u.id+')">Eliminar</button></div></div></div>';
+  }).join('')+
   '<div class="card" style="margin-top:1.5rem"><h3 style="margin:0 0 12px;font-size:15px;font-weight:500">Agregar empleado</h3>'+
   '<div class="fr"><div><label>Nombre completo</label><input id="nu_name" placeholder="Juan Pérez"/></div><div><label>Usuario</label><input id="nu_user" placeholder="juan.perez" autocapitalize="none"/></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Contraseña</label><input id="nu_pass" type="password"/></div><div><label>Departamento</label><input id="nu_dept" placeholder="Ventas"/></div></div>'+
@@ -764,6 +809,8 @@ function renderAdminUsers(){
   '<div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="nu_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="nu_role"><option value="employee">Empleado</option><option value="boss">Jefe</option><option value="admin">Admin</option></select></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Jefe directo</label><select id="nu_boss"><option value="">Sin jefe</option>'+bossList.map(function(b){return'<option value="'+b.id+'">'+b.name+'</option>';}).join('')+'</select></div><div><label>Descanso 1</label><select id="nu_desc1"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Descanso 2</label><select id="nu_desc2"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div><label>Días vacaciones</label><input id="nu_days" type="number" value="15"/></div></div>'+
+  '<div class="fr" style="margin-top:4px"><div><label>Fecha de ingreso</label><input id="nu_ingreso" type="date" onchange="previewVacNuevo()"/></div><div><label>Fecha de nacimiento</label><input id="nu_nacimiento" type="date"/></div></div>'+
+  '<div id="nu_vac_preview" style="display:none;background:#E6F1FB;border-radius:8px;padding:8px 12px;margin-top:6px;font-size:13px;color:#185FA5"></div>'+
   '<p id="newUserMsg" style="font-size:13px;margin:8px 0 0;display:none"></p>'+
   '<button class="btn-p" onclick="addUser()" style="margin-top:12px;font-size:13px;padding:8px 18px">Crear usuario</button></div>';
 }
@@ -795,7 +842,16 @@ function openEditModal(uid){
   document.getElementById('edit_id').value=u.id;document.getElementById('edit_name').value=u.name;document.getElementById('edit_user').value=u.user_name;document.getElementById('edit_pass').value='';document.getElementById('edit_dept').value=u.dept;document.getElementById('edit_email').value=u.email||'';document.getElementById('edit_role').value=u.role;document.getElementById('edit_days').value=u.days;document.getElementById('edit_used').value=u.used;document.getElementById('edit_horas').value=u.horas_banco||12;document.getElementById('edit_horasU').value=u.horas_usadas||0;document.getElementById('edit_planta').value=u.planta||'Zubex Planta';document.getElementById('edit_desc1').value=u.dia_descanso||'';document.getElementById('edit_desc2').value=u.dia_descanso2||'';
   var bossSel=document.getElementById('edit_boss');var bossList=AU.filter(function(x){return x.role==='boss'&&x.id!==uid;});
   bossSel.innerHTML='<option value="">Sin jefe</option>'+bossList.map(function(b){return'<option value="'+b.id+'"'+(u.boss===b.id?' selected':'')+'>'+b.name+'</option>';}).join('');
-  document.getElementById('editMsg').style.display='none';document.getElementById('editModal').style.display='flex';
+  document.getElementById('edit_ingreso').value=u.fecha_ingreso||'';
+  document.getElementById('edit_nacimiento').value=u.fecha_nacimiento||'';
+  // Mostrar preview de días correspondientes
+  if(u.fecha_ingreso){
+    var anios=calcAniosIngreso(u.fecha_ingreso);
+    var dias=getDiasVac(anios);
+    var prev=document.getElementById('edit_vac_preview');
+    prev.style.display='block';
+    prev.innerHTML='Antigüedad: <strong>'+anios+' año'+(anios!==1?'s':'')+'</strong> · Días que corresponden: <strong>'+dias+'</strong>';
+  }
 }
 async function saveEditUser(){
   var id=parseInt(document.getElementById('edit_id').value);
@@ -803,7 +859,11 @@ async function saveEditUser(){
   var msg=document.getElementById('editMsg');
   if(!name||!uname||!dept){msg.style.color='#A32D2D';msg.textContent='Completa los campos obligatorios.';msg.style.display='block';return;}
   var initials=name.split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
-  var payload={name:name,user_name:uname,dept:dept,role:role,boss:boss?parseInt(boss):null,days:days,used:used,avatar:initials,horas_banco:horas,horas_usadas:horasU,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,email:email};
+  var ingreso=document.getElementById('edit_ingreso').value;
+  var nacimiento=document.getElementById('edit_nacimiento').value;
+  var aniosCalc=calcAniosIngreso(ingreso);
+  var diasCalc=getDiasVac(aniosCalc);
+  var payload={name:name,user_name:uname,dept:dept,role:role,boss:boss?parseInt(boss):null,days:diasCalc,used:used,avatar:initials,horas_banco:horas,horas_usadas:horasU,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,email:email,fecha_ingreso:ingreso,fecha_nacimiento:nacimiento};
   if(pass)payload.pass=pass;
   try{
     await sPatch('users','id=eq.'+id,payload);
@@ -814,6 +874,17 @@ async function saveEditUser(){
 }
 function openDeleteModal(uid){var u=AU.find(function(x){return x.id===uid;});if(!u)return;delT=u;document.getElementById('deleteMsg').textContent='¿Eliminar a "'+u.name+'"? Esta acción no se puede deshacer.';document.getElementById('deleteModal').style.display='flex';}
 async function confirmDelete(){if(!delT)return;try{await sDel('requests','user_id=eq.'+delT.id);await sDel('banco_horas','user_id=eq.'+delT.id);await sDel('permisos','user_id=eq.'+delT.id);await sDel('users','id=eq.'+delT.id);closeModal('deleteModal');await loadAll();renderAdminUsers();buildNav();}catch(e){alert('Error al eliminar.');}}
+function previewVacNuevo(){
+  var ingreso=document.getElementById('nu_ingreso').value;
+  var prev=document.getElementById('nu_vac_preview');
+  if(ingreso){
+    var anios=calcAniosIngreso(ingreso);var dias=getDiasVac(anios);
+    prev.style.display='block';
+    prev.innerHTML='Antigüedad: <strong>'+anios+' año'+(anios!==1?'s':'')+'</strong> · Días que corresponden: <strong>'+dias+'</strong>';
+    document.getElementById('nu_days').value=dias;
+  }else{prev.style.display='none';}
+}
+
 async function addUser(){
   var name=document.getElementById('nu_name').value.trim(),uname=document.getElementById('nu_user').value.trim().toLowerCase(),pass=document.getElementById('nu_pass').value.trim(),dept=document.getElementById('nu_dept').value.trim(),email=document.getElementById('nu_email').value.trim(),planta=document.getElementById('nu_planta').value,role=document.getElementById('nu_role').value,boss=document.getElementById('nu_boss').value,desc1=document.getElementById('nu_desc1').value,desc2=document.getElementById('nu_desc2').value,days=parseInt(document.getElementById('nu_days').value)||15;
   var msg=document.getElementById('newUserMsg');
