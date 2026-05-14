@@ -381,10 +381,13 @@ function toggleDark(){var dk=document.body.classList.toggle('dark');document.get
 if(localStorage.getItem('zx-dark')==='1'){document.body.classList.add('dark');}
 
 // LOGIN
-function togglePass(){var i=document.getElementById('loginPass'),b=document.getElementById('togglePassBtn');if(i.type==='password'){i.type='text';b.textContent='🙈';}else{i.type='password';b.textContent='👁';}}
+function togglePass(){
+  var i=document.getElementById('loginPass'),b=document.getElementById('togglePassBtn');
+  if(i.type==='password'){i.type='text';b.textContent='🙈';}
+  else{i.type='password';b.textContent='👁';}
+}
 (function(){var s=localStorage.getItem('zx-user');if(s){document.getElementById('loginUser').value=s;document.getElementById('rememberMe').checked=true;}})();
 
-function H2(x){return{'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+SK};}
 async function doLogin(){
   var u=document.getElementById('loginUser').value.trim().toLowerCase();
   var p=document.getElementById('loginPass').value.trim();
