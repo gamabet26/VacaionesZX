@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Vacaciones Zubex</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh;transition:background .2s,color .2s}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid #d3d1c7;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:#1a1a1a;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,0.1)}
+button{cursor:pointer;font-family:inherit}
+.card{background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.bp{background:#FAEEDA;color:#854F0B;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px}
+.ba{background:#EAF3DE;color:#3B6D11;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px}
+.br{background:#FCEBEB;color:#A32D2D;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px}
+.screen{display:none}.screen.active{display:block}
+.nb{border:none;background:none;padding:12px 14px;font-size:13px;color:#888;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.nb.active{color:#185FA5;border-bottom:2px solid #185FA5;font-weight:500}
+#wm{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:0}
+#wm span{font-size:200px;font-weight:700;color:#185FA5;opacity:0.09;user-select:none;letter-spacing:-8px}
+.hdr{background:#185FA5;padding:0 1.25rem;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.cnt{padding:1.25rem;max-width:1000px;margin:0 auto;position:relative;z-index:1}
+.gs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.5rem}
+.btn-p{background:#185FA5;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:500}
+.btn-s{background:#3B6D11;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:500}
+.btn-d{background:#A32D2D;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:500}
+.btn-l{background:#f1efe8;border:none;border-radius:8px;padding:9px 12px;font-size:13px;cursor:pointer;color:#666}
+.btn-e{background:#E6F1FB;color:#185FA5;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-weight:500}
+.btn-de{background:#FCEBEB;color:#A32D2D;border:none;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-weight:500}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:300}
+.mb{background:#fff;border-radius:14px;padding:1.5rem;width:400px;margin:0 1rem;max-height:90vh;overflow-y:auto}
+.av{border-radius:50%;background:#E6F1FB;display:inline-flex;align-items:center;justify-content:center;font-weight:500;color:#185FA5;flex-shrink:0}
+.np{position:absolute;right:0;top:32px;width:290px;background:#fff;border:1px solid rgba(0,0,0,0.12);border-radius:12px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.12);overflow:hidden}
+label{font-size:13px;color:#555;display:block;margin-bottom:4px;margin-top:10px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
+.cal-day{min-height:64px;background:#f9f9f7;border-radius:6px;padding:4px;font-size:11px;border:1px solid rgba(0,0,0,0.06)}
+.cal-day.today{border:2px solid #185FA5}.cal-day.other-month{opacity:0.35}
+.cal-dot{font-size:10px;background:#E6F1FB;color:#185FA5;border-radius:4px;padding:1px 4px;margin-top:2px;display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.week-row{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:8px}
+.wc{background:#f9f9f7;border-radius:8px;padding:8px;min-height:80px}
+.wch{font-size:11px;font-weight:600;color:#185FA5;margin-bottom:6px;text-align:center}
+.we{font-size:11px;background:#E6F1FB;color:#185FA5;border-radius:4px;padding:2px 5px;margin-bottom:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f1efe8;padding:8px 10px;text-align:left;font-weight:500;font-size:12px;color:#555}
+td{padding:8px 10px;border-bottom:1px solid rgba(0,0,0,0.06)}
+tr:hover td{background:#fafaf8}
+.fb{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;align-items:flex-end}
+.fb>div{flex:1;min-width:130px}
+.info-box{background:#E6F1FB;border-radius:8px;padding:10px 14px;font-size:13px;color:#185FA5;margin-bottom:12px;line-height:1.5}
+.warn-box{background:#FAEEDA;border-radius:8px;padding:10px 14px;font-size:13px;color:#854F0B;margin-bottom:0;line-height:1.5}
+body.dark{background:#1a1a1a;color:#e8e6e0}
+body.dark .card{background:#2a2a2a;border-color:rgba(255,255,255,0.08)}
+body.dark input,body.dark select,body.dark textarea{background:#333;border-color:#555;color:#e8e6e0}
+body.dark .hdr{background:#0f3d6e}
+body.dark #navBar{background:#222;border-color:rgba(255,255,255,0.08)}
+body.dark .nb{color:#aaa}
+body.dark .nb.active{color:#5ba3e0;border-bottom-color:#5ba3e0}
+body.dark .btn-l{background:#333;color:#ccc}
+body.dark .mb{background:#2a2a2a}
+body.dark .cal-day{background:#2e2e2e;border-color:rgba(255,255,255,0.06)}
+body.dark .wc{background:#2e2e2e}
+body.dark th{background:#2e2e2e;color:#aaa}
+body.dark td{border-color:rgba(255,255,255,0.06)}
+body.dark tr:hover td{background:#333}
+body.dark .np{background:#2a2a2a;border-color:#444}
+body.dark #wm span{color:#5ba3e0}
+body.dark .info-box{background:#1a2e40;color:#7ab8e0}
+body.dark .warn-box{background:#2e2010;color:#e0a050}
+body.dark label{color:#aaa}
+@media(max-width:600px){.fr{grid-template-columns:1fr}.nh{display:none}.week-row{grid-template-columns:repeat(4,1fr)}}
+@media print{.hdr,#navBar,#wm,.no-print{display:none!important}.cnt{padding:0}}
+</style>
+</head>
+<body>
+<div id="wm"><span>ZX</span></div>
+
+<!-- LOGIN -->
+<div id="loginScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:1">
+  <div class="card" style="width:340px;padding:2rem 2.5rem;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div style="width:52px;height:52px;background:#E6F1FB;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <span style="font-size:22px;font-weight:700;color:#185FA5;letter-spacing:-1px">ZX</span>
+      </div>
+      <h2 style="font-size:20px;font-weight:600;color:#185FA5">Vacaciones Zubex</h2>
+      <p style="font-size:13px;color:#888;margin-top:4px">Acceso corporativo</p>
+    </div>
+    <label>Usuario</label>
+    <input id="loginUser" placeholder="tu.usuario" autocapitalize="none" autocorrect="off" autocomplete="username" spellcheck="false" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <label style="margin-top:12px">Contraseña</label>
+    <div style="position:relative">
+      <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:40px"/>
+      <button onclick="togglePass()" type="button" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#888;padding:0" id="togglePassBtn">👁</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+      <input type="checkbox" id="rememberMe" style="width:auto;cursor:pointer"/>
+      <label for="rememberMe" style="margin:0;cursor:pointer;font-size:13px;color:#666">Recordar usuario</label>
+    </div>
+    <p id="loginError" style="color:#A32D2D;font-size:13px;margin:8px 0 0;display:none"></p>
+    <button class="btn-p" onclick="doLogin()" style="width:100%;margin-top:16px" id="loginBtn">Ingresar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen" style="display:none;min-height:100vh">
+  <div class="hdr">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:16px;font-weight:700;color:#fff;letter-spacing:-1px">ZX</span>
+      <span style="color:#fff;font-weight:600;font-size:15px">Vacaciones Zubex</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="position:relative" id="notifWrapper">
+        <div style="color:#fff;cursor:pointer;position:relative" onclick="toggleNotifs()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notifBadge" style="display:none;position:absolute;top:-5px;right:-5px;background:#A32D2D;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center"></span>
+        </div>
+        <div id="notifPanel" class="np" style="display:none">
+          <div style="padding:10px 14px;border-bottom:1px solid rgba(0,0,0,0.1);font-size:13px;font-weight:500">Notificaciones</div>
+          <div id="notifList"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div id="headerAvatar" class="av" style="width:30px;height:30px;font-size:11px"></div>
+        <span id="headerName" class="nh" style="color:#fff;font-size:13px"></span>
+      </div>
+      <button onclick="doLogout()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:6px;padding:4px 10px;font-size:12px">Salir</button>
+      <button onclick="toggleDark()" id="darkBtn" style="background:none;border:none;color:#fff;cursor:pointer;font-size:18px;padding:2px 4px">🌙</button>
+    </div>
+  </div>
+  <div id="navBar" style="border-bottom:1px solid rgba(0,0,0,0.1);display:flex;background:#fff;padding-left:1rem;position:sticky;top:52px;z-index:99;overflow-x:auto"></div>
+  <div class="cnt">
+    <div id="vDashboard" class="screen active"><h2 style="margin:0 0 1rem;font-size:17px;font-weight:500" id="welcomeMsg"></h2><div class="gs" id="statsGrid"></div><div id="myRecentReqs"></div><div id="pendingPreview"></div></div>
+
+    <!-- VACACIONES -->
+    <div id="vVacaciones" class="screen">
+      <h2 style="margin:0 0 1rem;font-size:17px;font-weight:500">Solicitud de Vacaciones</h2>
+      <div class="info-box">📋 Solicita con anticipación conforme a tu plan anual. El saldo restante podrá disfrutarse según tus necesidades y autorización de tu jefe inmediato.</div>
+      <div class="card" style="max-width:480px">
+        <div class="fr">
+          <div><label>Fecha inicio</label><input type="date" id="vFrom" oninput="calcVac()"/></div>
+          <div><label>Fecha fin</label><input type="date" id="vTo" oninput="calcVac()"/></div>
+        </div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="vHalf" onchange="calcVac()" style="width:auto"/>
+          <label style="margin:0;cursor:pointer" for="vHalf">¿Incluye medio día? (.5)</label>
+        </div>
+        <div class="fr" style="margin-top:8px">
+          <div><label>Día de descanso 1</label>
+            <select id="vDescanso" onchange="calcVac()">
+              <option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option>
+            </select>
+          </div>
+          <div><label>Día de descanso 2</label>
+            <select id="vDescanso2" onchange="calcVac()">
+              <option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option>
+            </select>
+          </div>
+        </div>
+        <div id="vacPreview" style="display:none;background:#E6F1FB;border-radius:8px;padding:8px 12px;margin-top:10px;font-size:13px;color:#185FA5"></div>
+        <p id="vacMsg" style="font-size:13px;margin:8px 0 0;display:none"></p>
+        <button class="btn-p" onclick="submitVac()" style="margin-top:14px" id="vacBtn">Enviar solicitud</button>
+      </div>
+    </div>
+
+    <!-- MIS SOLICITUDES -->
+    <div id="vMisSolicitudes" class="screen">
+      <h2 style="margin:0 0 .5rem;font-size:17px;font-weight:500">Mis Solicitudes</h2>
+      <div style="display:flex;gap:0;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:1rem">
+        <button class="nb active" id="msTab1" onclick="switchMsTab('vac')">Vacaciones</button>
+        <button class="nb" id="msTab2" onclick="switchMsTab('banco')">Banco de Horas</button>
+        <button class="nb" id="msTab3" onclick="switchMsTab('permiso')">Permisos</button>
+      </div>
+      <div id="msVac"></div><div id="msBanco" style="display:none"></div><div id="msPermiso" style="display:none"></div>
+    </div>
+
+    <!-- BANCO DE HORAS -->
+    <div id="vBancoHoras" class="screen">
+      <h2 style="margin:0 0 1rem;font-size:17px;font-weight:500">Banco de Horas</h2>
+      <div class="info-box">⏰ Se otorgan <strong>12 horas por año</strong>. Solicita con al menos <strong>8 horas de anticipación</strong>. Este banco <strong>no puede usarse</strong> para justificar ausentismo o retardos.</div>
+      <div id="bancoSaldo" style="margin-bottom:1rem"></div>
+      <div class="card" style="max-width:480px">
+        <div class="fr">
+          <div><label>Fecha de uso</label><input type="date" id="bFecha"/></div>
+          <div><label>Horas a ocupar</label><input type="number" id="bHoras" placeholder="Ej. 2.5" step="0.5" min="0.5"/></div>
+        </div>
+        <p id="bancoMsg" style="font-size:13px;margin:8px 0 0;display:none"></p>
+        <button class="btn-p" onclick="submitBanco()" style="margin-top:14px" id="bancoBtn">Enviar solicitud</button>
+      </div>
+    </div>
+
+    <!-- PERMISOS -->
+    <div id="vPermisos" class="screen">
+      <h2 style="margin:0 0 1rem;font-size:17px;font-weight:500">Solicitud de Permiso</h2>
+      <div class="info-box">📝 Solicita con al menos <strong>1 semana de anticipación</strong>. Para matrimonio, fallecimiento u otros casos especiales, deberás entregar el documento soporte.</div>
+      <div class="card" style="max-width:480px">
+        <div><label>Tipo de permiso</label>
+          <select id="pTipo" onchange="checkPermisoTipo()">
+            <option value="">Selecciona...</option><option value="Matrimonio">Matrimonio</option><option value="Paternidad">Paternidad</option><option value="Fallecimiento">Fallecimiento</option><option value="Otro motivo">Otro motivo</option>
+          </select>
+        </div>
+        <div id="pParentescoBox" style="display:none"><label>Parentesco</label>
+          <select id="pParentesco" onchange="checkParentesco()">
+            <option value="">Selecciona parentesco...</option><option value="Padre">Padre</option><option value="Madre">Madre</option><option value="Hijo(a)">Hijo(a)</option><option value="Esposo(a)">Esposo(a)</option><option value="Hermano(a)">Hermano(a)</option><option value="Abuelo(a)">Abuelo(a)</option><option value="Otros">Otros</option>
+          </select>
+        </div>
+        <div id="pDocWarning" style="display:none;margin-top:10px" class="warn-box">⚠️ Este permiso requiere entregar documento soporte.</div>
+        <div id="pGoceBox" style="display:none"><label>Tipo de goce</label>
+          <div id="pGoceLabel" style="border-radius:8px;padding:8px 12px;font-size:13px;font-weight:500;margin-top:4px"></div>
+          <input type="hidden" id="pGoce" value=""/>
+        </div>
+        <div class="fr">
+          <div><label>Del día</label><input type="date" id="pDesde"/></div>
+          <div><label>Para regresar el</label><input type="date" id="pHasta"/></div>
+        </div>
+        <p id="permisoMsg" style="font-size:13px;margin:8px 0 0;display:none"></p>
+        <button class="btn-p" onclick="submitPermiso()" style="margin-top:14px" id="permisoBtn">Enviar solicitud</button>
+      </div>
+    </div>
+
+    <!-- PENDIENTES -->
+    <div id="vPendientes" class="screen">
+      <h2 style="margin:0 0 .5rem;font-size:17px;font-weight:500">Solicitudes Pendientes</h2>
+      <div style="display:flex;gap:0;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:1rem">
+        <button class="nb active" id="ptTab1" onclick="switchPtTab('vac')">Vacaciones</button>
+        <button class="nb" id="ptTab2" onclick="switchPtTab('banco')">Banco de Horas</button>
+        <button class="nb" id="ptTab3" onclick="switchPtTab('permiso')">Permisos</button>
+      </div>
+      <div id="ptVac"></div><div id="ptBanco" style="display:none"></div><div id="ptPermiso" style="display:none"></div>
+    </div>
+
+    <!-- RRHH -->
+    <div id="vRrhhDashboard" class="screen">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:10px">
+        <h2 style="font-size:17px;font-weight:500">Dashboard RRHH</h2>
+        <button onclick="exportCSV()" class="no-print" style="background:#EAF3DE;color:#3B6D11;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer">⬇ Exportar CSV</button>
+      </div>
+      <div class="gs" id="rrhhKpis"></div>
+      <div class="fr" style="margin-bottom:1rem">
+        <div class="card" style="margin-bottom:0"><div style="font-size:13px;font-weight:500;color:#185FA5;margin-bottom:8px">🏭 Zubex Planta</div><div id="plantaStats"></div></div>
+        <div class="card" style="margin-bottom:0"><div style="font-size:13px;font-weight:500;color:#185FA5;margin-bottom:8px">🏢 Zubex CEDIS</div><div id="cedisStats"></div></div>
+      </div>
+      <div class="card no-print">
+        <div style="font-size:13px;font-weight:500;margin-bottom:10px;color:#555">Filtros</div>
+        <div class="fb">
+          <div><label>Desde</label><input type="date" id="fFrom" onchange="applyFilters()"/></div>
+          <div><label>Hasta</label><input type="date" id="fTo" onchange="applyFilters()"/></div>
+          <div><label>Planta</label><select id="fPlanta" onchange="applyFilters()"><option value="">Todas</option><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div>
+          <div><label>Departamento</label><select id="fDept" onchange="applyFilters()"><option value="">Todos</option></select></div>
+          <div><label>Empleado</label><select id="fEmp" onchange="applyFilters()"><option value="">Todos</option></select></div>
+          <div><label>Estatus</label><select id="fStatus" onchange="applyFilters()"><option value="">Todos</option><option value="approved">Aprobadas</option><option value="pending">Pendientes</option><option value="rejected">Rechazadas</option></select></div>
+          <div style="display:flex;align-items:flex-end"><button onclick="clearFilters()" class="btn-l" style="width:100%">Limpiar</button></div>
+        </div>
+      </div>
+      <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:4px">📅 Ausencias esta semana</div><div style="font-size:12px;color:#888;margin-bottom:8px" id="weekRangeLabel"></div><div class="week-row" id="weekGrid"></div></div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <button onclick="prevMonth()" style="border:none;background:#f1efe8;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px">‹</button>
+          <div style="font-size:14px;font-weight:500" id="calTitle"></div>
+          <button onclick="nextMonth()" style="border:none;background:#f1efe8;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px">›</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px">
+          <div style="text-align:center;font-size:11px;font-weight:600;color:#888;padding:4px">Dom</div><div style="text-align:center;font-size:11px;font-weight:600;color:#888;padding:4px">Lun</div><div style="text-align:center;font-size:11px;font-weight:600;color:#888;padding:4px">Mar</div><div style="text-align:center;font-size:11px;font-weight:600;color:#888;padding:4px">Mié</div><div style="text-align:center;font-size:11px;font-weight:600;color:#888;padding:4px">Jue</div><div style="text-align:center;font-size:11px;font-weight:600;color:#888;padding:4px">Vie</div><div style="text-align:center;font-size:11px;font-weight:600;color:#888;padding:4px">Sáb</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:#888">
+          <span><span style="display:inline-block;width:10px;height:10px;background:#E6F1FB;border-radius:2px;margin-right:3px"></span>Vacaciones</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:#FFF3CD;border-radius:2px;margin-right:3px"></span>Día festivo</span>
+        </div>
+      </div>
+      <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:10px">🏢 Ausencias por departamento</div><div id="deptGrid"></div></div>
+      <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:10px">📋 Historial vacaciones</div><div style="overflow-x:auto"><table><thead><tr><th>Empleado</th><th>Planta</th><th>Depto</th><th>Desde</th><th>Hasta</th><th>Días</th><th>Motivo</th><th>Estatus</th></tr></thead><tbody id="fullTableBody"></tbody></table></div></div>
+      <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:10px">📋 Historial permisos</div><div style="overflow-x:auto"><table><thead><tr><th>Empleado</th><th>Planta</th><th>Tipo</th><th>Goce</th><th>Desde</th><th>Hasta</th><th>Estatus</th></tr></thead><tbody id="permisosTableBody"></tbody></table></div></div>
+      <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:10px">⏰ Historial banco de horas</div><div style="overflow-x:auto"><table><thead><tr><th>Empleado</th><th>Planta</th><th>Fecha uso</th><th>Horas</th><th>Estatus</th></tr></thead><tbody id="bancoTableBody"></tbody></table></div></div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="vAdminPanel" class="screen">
+      <h2 style="margin:0 0 1rem;font-size:17px;font-weight:500">Panel de administración</h2>
+      <div style="display:flex;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:1rem">
+        <button class="nb active" id="tabUsersBtn" onclick="switchAdminTab('users')">Empleados</button>
+        <button class="nb" id="tabReqsBtn" onclick="switchAdminTab('allRequests')">Solicitudes</button>
+        <button class="nb" id="tabFestBtn" onclick="switchAdminTab('festivos')">📅 Días Festivos</button>
+      </div>
+      <div id="adminUsers"></div>
+      <div id="adminAllReqs" style="display:none"></div>
+      <div id="adminFestivos" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALES -->
+<div id="actionModal" class="mo" style="display:none"><div class="mb">
+  <h3 style="margin:0 0 12px;font-size:16px;font-weight:500">Gestionar solicitud</h3>
+  <div id="modalInfo" style="background:#f5f5f3;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:13px"></div>
+  <label>Comentario (opcional)</label>
+  <textarea id="modalComment" rows="2" placeholder="Agrega un comentario..." style="resize:none;margin-top:4px"></textarea>
+  <div style="display:flex;gap:8px;margin-top:14px">
+    <button class="btn-s" onclick="handleAction('approved')" style="flex:1">Aprobar</button>
+    <button class="btn-d" onclick="handleAction('rejected')" style="flex:1">Rechazar</button>
+    <button class="btn-l" onclick="closeModal('actionModal')">Cancelar</button>
+  </div>
+</div></div>
+
+<div id="editModal" class="mo" style="display:none"><div class="mb">
+  <h3 style="margin:0 0 16px;font-size:16px;font-weight:500">Editar empleado</h3>
+  <input type="hidden" id="edit_id"/>
+  <div class="fr"><div><label>Nombre completo</label><input id="edit_name"/></div><div><label>Usuario</label><input id="edit_user" autocapitalize="none"/></div></div>
+  <div class="fr" style="margin-top:4px"><div><label>Nueva contraseña</label><input id="edit_pass" type="password" placeholder="Vacío = sin cambio"/></div><div><label>Departamento</label><input id="edit_dept"/></div></div>
+  <div style="margin-top:4px"><label>Correo electrónico</label><input id="edit_email" type="email" placeholder="correo@zubex.com"/></div>
+  <div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="edit_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="edit_role"><option value="employee">Empleado</option><option value="boss">Jefe</option><option value="admin">Admin</option></select></div></div>
+  <div class="fr" style="margin-top:4px"><div><label>Jefe directo</label><select id="edit_boss"></select></div><div><label>Descanso 1</label><select id="edit_desc1"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div></div>
+  <div class="fr" style="margin-top:4px"><div><label>Descanso 2</label><select id="edit_desc2"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div><label>Días vacaciones</label><input id="edit_days" type="number"/></div></div>
+  <div class="fr" style="margin-top:4px"><div><label>Días usados</label><input id="edit_used" type="number"/></div><div><label>Horas banco</label><input id="edit_horas" type="number" step="0.5"/></div></div>
+  <div style="max-width:50%;margin-top:4px"><label>Horas usadas</label><input id="edit_horasU" type="number" step="0.5"/></div>
+  <p id="editMsg" style="font-size:13px;margin:10px 0 0;display:none"></p>
+  <div style="display:flex;gap:8px;margin-top:16px"><button class="btn-p" onclick="saveEditUser()" style="flex:1">Guardar cambios</button><button class="btn-l" onclick="closeModal('editModal')">Cancelar</button></div>
+</div></div>
+
+<div id="deleteModal" class="mo" style="display:none"><div class="mb" style="width:320px">
+  <h3 style="margin:0 0 10px;font-size:16px;font-weight:500">Eliminar empleado</h3>
+  <p id="deleteMsg" style="font-size:14px;color:#555;margin-bottom:16px"></p>
+  <div style="display:flex;gap:8px"><button class="btn-d" onclick="confirmDelete()" style="flex:1">Sí, eliminar</button><button class="btn-l" onclick="closeModal('deleteModal')" style="flex:1">Cancelar</button></div>
+</div></div>
+
+<script>
+emailjs.init('J_I1pNlsVBL2iQdGG');
+var EJ_SVC='service_8inboff', EJ_TPL='template_v1fmzge';
+
+var SB='https://gdhbfibidlrghcustjfa.supabase.co';
+var SK='sb_publishable__jDwawpVxCiRDal8dFFk3A_3GL1mVUf';
+function H(){return{'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+SK};}
+async function sGet(t,p){var r=await fetch(SB+'/rest/v1/'+t+'?'+p,{headers:H()});return await r.json();}
+async function sPost(t,d){var r=await fetch(SB+'/rest/v1/'+t,{method:'POST',headers:{...H(),'Prefer':'return=representation'},body:JSON.stringify(d)});return await r.json();}
+async function sPatch(t,f,d){var r=await fetch(SB+'/rest/v1/'+t+'?'+f,{method:'PATCH',headers:{...H(),'Prefer':'return=representation'},body:JSON.stringify(d)});return await r.json();}
+async function sDel(t,f){await fetch(SB+'/rest/v1/'+t+'?'+f,{method:'DELETE',headers:H()});}
+
+var CU=null,AU=[],AR=[],BH=[],PM=[],DF=[],aModal=null,aModalType='vac',editT=null,delT=null;
+var calY=new Date().getFullYear(),calM=new Date().getMonth(),filtAR=[];
+
+// EMAIL
+async function sendMail(toEmail,toName,asunto,mensaje,tipo,fechas,estatus){
+  if(!toEmail)return;
+  try{
+    await emailjs.send(EJ_SVC,EJ_TPL,{to_email:toEmail,to_name:toName,nombre:toName,asunto:asunto,mensaje:mensaje,tipo:tipo,fechas:fechas,estatus:estatus});
+  }catch(e){console.warn('Email error:',e);}
+}
+async function notifyBoss(tipo,fechas){
+  var boss=AU.find(function(u){return u.id===CU.boss;});
+  if(boss&&boss.email){await sendMail(boss.email,boss.name,'Nueva solicitud pendiente',CU.name+' ha enviado una solicitud que requiere tu aprobación.',tipo,fechas,'⏳ Pendiente');}
+}
+
+// DARK
+function toggleDark(){var dk=document.body.classList.toggle('dark');document.getElementById('darkBtn').textContent=dk?'☀️':'🌙';localStorage.setItem('zx-dark',dk?'1':'0');}
+if(localStorage.getItem('zx-dark')==='1'){document.body.classList.add('dark');}
+
+// LOGIN
+function togglePass(){var i=document.getElementById('loginPass'),b=document.getElementById('togglePassBtn');if(i.type==='password'){i.type='text';b.textContent='🙈';}else{i.type='password';b.textContent='👁';}}
+(function(){var s=localStorage.getItem('zx-user');if(s){document.getElementById('loginUser').value=s;document.getElementById('rememberMe').checked=true;}})();
+
+function H2(x){return{'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+SK};}
+async function doLogin(){
+  var u=document.getElementById('loginUser').value.trim().toLowerCase();
+  var p=document.getElementById('loginPass').value.trim();
+  var err=document.getElementById('loginError'),btn=document.getElementById('loginBtn');
+  btn.textContent='Verificando...';btn.disabled=true;
+  try{
+    var data=await sGet('users','user_name=eq.'+encodeURIComponent(u)+'&select=*');
+    if(data&&data.length>0&&data[0].pass===p){
+      CU=data[0];err.style.display='none';
+      if(document.getElementById('rememberMe').checked)localStorage.setItem('zx-user',u);
+      else localStorage.removeItem('zx-user');
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('appScreen').style.display='block';
+      await loadAll();initApp();
+    }else{err.textContent='Usuario o contraseña incorrectos';err.style.display='block';}
+  }catch(e){err.textContent='Error de conexión.';err.style.display='block';}
+  btn.textContent='Ingresar';btn.disabled=false;
+}
+function doLogout(){CU=null;AU=[];AR=[];BH=[];PM=[];DF=[];document.getElementById('appScreen').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';}
+
+async function loadAll(){
+  AU=await sGet('users','select=*&order=id.asc');
+  AR=await sGet('requests','select=*&order=id.desc');
+  BH=await sGet('banco_horas','select=*&order=id.desc');
+  PM=await sGet('permisos','select=*&order=id.desc');
+  DF=await sGet('dias_festivos','select=*&order=fecha.asc');
+  var f=AU.find(function(u){return u.id===CU.id;});if(f)CU=f;
+  filtAR=AR.slice();
+}
+
+function initApp(){
+  document.getElementById('headerAvatar').textContent=CU.avatar;
+  document.getElementById('headerName').textContent=CU.name;
+  buildNav();showView('dashboard');updateNotifs();
+}
+
+function buildNav(){
+  var nav=document.getElementById('navBar');nav.innerHTML='';
+  var items=[['dashboard','Inicio']];
+  if(CU.role!=='admin'){items.push(['vacaciones','Vacaciones']);items.push(['bancoHoras','Banco de Horas']);items.push(['permisos','Permisos']);items.push(['misSolicitudes','Mis Solicitudes']);}
+  var pc=getPending('vac').length+getPending('banco').length+getPending('permiso').length;
+  if(CU.role==='boss'||CU.role==='admin')items.push(['pendientes','Pendientes'+(pc>0?' ('+pc+')':'')]);
+  if(CU.role==='boss'||CU.role==='admin')items.push(['rrhhDashboard','📊 RRHH']);
+  if(CU.role==='admin')items.push(['adminPanel','Administración']);
+  items.forEach(function(it){var b=document.createElement('button');b.className='nb';b.textContent=it[1];b.dataset.view=it[0];b.onclick=function(){showView(it[0]);};nav.appendChild(b);});
+}
+
+function showView(v){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('active');if(b.dataset.view===v)b.classList.add('active');});
+  var el=document.getElementById('v'+v.charAt(0).toUpperCase()+v.slice(1));if(el)el.classList.add('active');
+  if(v==='dashboard')renderDash();
+  else if(v==='misSolicitudes')renderMisSolicitudes();
+  else if(v==='bancoHoras')renderBancoSaldo();
+  else if(v==='pendientes')switchPtTab('vac');
+  else if(v==='rrhhDashboard')renderRRHH();
+  else if(v==='adminPanel')renderAdmin();
+}
+
+function getPending(type){
+  var team=CU.role==='boss'?AU.filter(function(u){return u.boss===CU.id;}):AU;
+  if(type==='vac')return AR.filter(function(r){return r.status==='pending'&&team.find(function(u){return u.id===r.user_id;});});
+  if(type==='banco')return BH.filter(function(r){return r.status==='pending'&&team.find(function(u){return u.id===r.user_id;});});
+  return PM.filter(function(r){return r.status==='pending'&&team.find(function(u){return u.id===r.user_id;});});
+}
+
+// HELPERS
+function diffDaysExcl(from,to,d1,d2){
+  var d=0,cur=new Date(from),end=new Date(to);
+  var fest=DF.map(function(f){return f.fecha;});
+  while(cur<=end){
+    var dow=cur.getDay(),ds=cur.toISOString().split('T')[0];
+    var isDesc=(d1!==''&&dow===parseInt(d1))||(d2!==''&&dow===parseInt(d2));
+    if(!isDesc&&fest.indexOf(ds)<0)d++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return d||0.5;
+}
+function bH(s){return'<span class="b'+(s==='pending'?'p':s==='approved'?'a':'r')+'">'+(s==='pending'?'Pendiente':s==='approved'?'Aprobada':'Rechazada')+'</span>';}
+function avH(i,sz){sz=sz||36;return'<div class="av" style="width:'+sz+'px;height:'+sz+'px;font-size:'+(sz*0.33)+'px">'+i+'</div>';}
+function fd(d){if(!d)return'';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+// VACACIONES
+function calcVac(){
+  var f=document.getElementById('vFrom').value,t=document.getElementById('vTo').value;
+  var half=document.getElementById('vHalf').checked;
+  var d1=document.getElementById('vDescanso').value,d2=document.getElementById('vDescanso2').value;
+  var dp=document.getElementById('vacPreview');
+  if(f&&t){
+    var d=diffDaysExcl(f,t,d1,d2);if(half)d=Math.max(0.5,d-0.5);
+    var avail=CU.days-CU.used;
+    var fests=DF.filter(function(x){return x.fecha>=f&&x.fecha<=t;});
+    var extras=[];if(d1!==''||d2!=='')extras.push('excluye descanso(s)');if(fests.length>0)extras.push('excluye '+fests.length+' festivo(s)');
+    dp.style.display='block';dp.innerHTML='Días a descontar: <strong>'+d+'</strong>'+(extras.length?' <span style="font-size:11px">('+extras.join(' · ')+')</span>':'')+' · Disponibles: <strong>'+avail+'</strong>';
+  }else{dp.style.display='none';}
+}
+
+async function submitVac(){
+  var from=document.getElementById('vFrom').value;
+  var to=document.getElementById('vTo').value;
+  var half=document.getElementById('vHalf').checked;
+  var d1=document.getElementById('vDescanso').value;
+  var d2=document.getElementById('vDescanso2').value;
+  var msg=document.getElementById('vacMsg'),btn=document.getElementById('vacBtn');
+  if(!from||!to){msg.style.color='#A32D2D';msg.textContent='Selecciona las fechas.';msg.style.display='block';return;}
+  var d=diffDaysExcl(from,to,d1,d2);
+  if(half)d=Math.max(0.5,d-0.5);
+  var avail=CU.days-CU.used;
+  if(d>avail){msg.style.color='#A32D2D';msg.textContent='Solo tienes '+avail+' días disponibles.';msg.style.display='block';return;}
+  btn.textContent='Enviando...';btn.disabled=true;
+  try{
+    await sPost('requests',{user_id:CU.id,from_date:from,to_date:to,days:d,reason:'Vacaciones',status:'pending',created_at:new Date().toISOString().split('T')[0],comment:'',half_day:half});
+    await notifyBoss('Vacaciones',from+' al '+to);
+    msg.style.color='#3B6D11';msg.textContent='Solicitud enviada correctamente.';msg.style.display='block';
+    document.getElementById('vFrom').value='';document.getElementById('vTo').value='';
+    document.getElementById('vHalf').checked=false;document.getElementById('vacPreview').style.display='none';
+    await loadAll();updateNotifs();buildNav();showView('misSolicitudes');
+  }catch(e){msg.style.color='#A32D2D';msg.textContent='Error al enviar.';msg.style.display='block';}
+  btn.textContent='Enviar solicitud';btn.disabled=false;
+}
+
+// BANCO
+function renderBancoSaldo(){
+  var avail=(CU.horas_banco||12)-(CU.horas_usadas||0);
+  document.getElementById('bancoSaldo').innerHTML='<div class="gs"><div style="background:#E6F1FB;border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:#185FA5;opacity:0.8;margin-bottom:4px">Horas disponibles</div><div style="font-size:26px;font-weight:500;color:#185FA5">'+avail+'</div></div><div style="background:#FAEEDA;border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:#854F0B;opacity:0.8;margin-bottom:4px">Horas usadas</div><div style="font-size:26px;font-weight:500;color:#854F0B">'+(CU.horas_usadas||0)+'</div></div><div style="background:#EAF3DE;border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:#3B6D11;opacity:0.8;margin-bottom:4px">Total banco</div><div style="font-size:26px;font-weight:500;color:#3B6D11">'+(CU.horas_banco||12)+'</div></div></div>';
+}
+async function submitBanco(){
+  var fecha=document.getElementById('bFecha').value;
+  var horas=parseFloat(document.getElementById('bHoras').value);
+  var msg=document.getElementById('bancoMsg'),btn=document.getElementById('bancoBtn');
+  if(!fecha||isNaN(horas)){msg.style.color='#A32D2D';msg.textContent='Completa todos los campos.';msg.style.display='block';return;}
+  var avail=(CU.horas_banco||12)-(CU.horas_usadas||0);
+  if(horas>avail){msg.style.color='#A32D2D';msg.textContent='Solo tienes '+avail+' horas disponibles.';msg.style.display='block';return;}
+  btn.textContent='Enviando...';btn.disabled=true;
+  try{
+    await sPost('banco_horas',{user_id:CU.id,horas:horas,motivo:'',status:'pending',created_at:new Date().toISOString().split('T')[0],comment:'',fecha_uso:fecha});
+    await notifyBoss('Banco de Horas',fecha+' · '+horas+' horas');
+    msg.style.color='#3B6D11';msg.textContent='Solicitud enviada correctamente.';msg.style.display='block';
+    document.getElementById('bFecha').value='';document.getElementById('bHoras').value='';
+    await loadAll();updateNotifs();buildNav();showView('misSolicitudes');
+  }catch(e){msg.style.color='#A32D2D';msg.textContent='Error al enviar.';msg.style.display='block';}
+  btn.textContent='Enviar solicitud';btn.disabled=false;
+}
+
+// PERMISOS
+function checkPermisoTipo(){
+  var tipo=document.getElementById('pTipo').value;
+  document.getElementById('pParentescoBox').style.display='none';
+  document.getElementById('pDocWarning').style.display='none';
+  document.getElementById('pGoceBox').style.display='none';
+  document.getElementById('pGoce').value='';
+  if(tipo==='Matrimonio'){
+    document.getElementById('pDocWarning').style.display='block';
+    setGoce('Con goce');
+  }else if(tipo==='Paternidad'){
+    setGoce('Con goce');
+  }else if(tipo==='Fallecimiento'){
+    document.getElementById('pDocWarning').style.display='block';
+    document.getElementById('pParentescoBox').style.display='block';
+    document.getElementById('pParentesco').value='';
+  }else if(tipo==='Otro motivo'){
+    document.getElementById('pDocWarning').style.display='block';
+    setGoce('Sin goce');
+  }
+}
+function setGoce(val){
+  document.getElementById('pGoce').value=val;
+  document.getElementById('pGoceBox').style.display='block';
+  var lbl=document.getElementById('pGoceLabel');
+  if(val==='Con goce'){lbl.textContent='✅ Con goce de sueldo';lbl.style.background='#EAF3DE';lbl.style.color='#3B6D11';}
+  else{lbl.textContent='❌ Sin goce de sueldo';lbl.style.background='#FCEBEB';lbl.style.color='#A32D2D';}
+}
+function checkParentesco(){
+  var p=document.getElementById('pParentesco').value;
+  if(!p){document.getElementById('pGoceBox').style.display='none';return;}
+  var conGoce=['Padre','Madre','Hijo(a)','Esposo(a)','Hermano(a)','Abuelo(a)'];
+  setGoce(conGoce.indexOf(p)>=0?'Con goce':'Sin goce');
+}
+async function submitPermiso(){
+  var tipo=document.getElementById('pTipo').value;
+  var goce=document.getElementById('pGoce').value;
+  var desde=document.getElementById('pDesde').value;
+  var hasta=document.getElementById('pHasta').value;
+  var parentesco=document.getElementById('pParentesco').value;
+  var msg=document.getElementById('permisoMsg'),btn=document.getElementById('permisoBtn');
+  if(!tipo){msg.style.color='#A32D2D';msg.textContent='Selecciona el tipo de permiso.';msg.style.display='block';return;}
+  if(tipo==='Fallecimiento'&&!parentesco){msg.style.color='#A32D2D';msg.textContent='Selecciona el parentesco.';msg.style.display='block';return;}
+  if(!goce){msg.style.color='#A32D2D';msg.textContent='El tipo de goce no se pudo determinar.';msg.style.display='block';return;}
+  if(!desde||!hasta){msg.style.color='#A32D2D';msg.textContent='Selecciona las fechas.';msg.style.display='block';return;}
+  if(tipo!=='Fallecimiento'){var dd=(new Date(desde)-new Date())/86400000;if(dd<7){msg.style.color='#A32D2D';msg.textContent='Solicita con al menos 1 semana de anticipación.';msg.style.display='block';return;}}
+  var reqDoc=(tipo==='Matrimonio'||tipo==='Fallecimiento'||tipo==='Otro motivo');
+  var tipoFull=tipo+(parentesco?' - '+parentesco:'');
+  btn.textContent='Enviando...';btn.disabled=true;
+  try{
+    await sPost('permisos',{user_id:CU.id,tipo:tipoFull,tipo_goce:goce,fecha_desde:desde,fecha_hasta:hasta,motivo:'',requiere_doc:reqDoc,status:'pending',created_at:new Date().toISOString().split('T')[0],comment:''});
+    await notifyBoss('Permiso: '+tipoFull,desde+' al '+hasta);
+    msg.style.color='#3B6D11';msg.textContent='Solicitud enviada.'+(reqDoc?' Recuerda entregar el documento soporte.':'');msg.style.display='block';
+    document.getElementById('pTipo').value='';document.getElementById('pDesde').value='';document.getElementById('pHasta').value='';
+    document.getElementById('pParentesco').value='';document.getElementById('pParentescoBox').style.display='none';
+    document.getElementById('pDocWarning').style.display='none';document.getElementById('pGoceBox').style.display='none';document.getElementById('pGoce').value='';
+    await loadAll();updateNotifs();buildNav();showView('misSolicitudes');
+  }catch(e){msg.style.color='#A32D2D';msg.textContent='Error al enviar.';msg.style.display='block';}
+  btn.textContent='Enviar solicitud';btn.disabled=false;
+}
+
+// MIS SOLICITUDES
+function renderMisSolicitudes(){switchMsTab('vac');}
+function switchMsTab(t){
+  ['vac','banco','permiso'].forEach(function(x,i){document.getElementById('msTab'+(i+1)).classList.toggle('active',x===t);document.getElementById('ms'+x.charAt(0).toUpperCase()+x.slice(1)).style.display=x===t?'block':'none';});
+  var myAR=AR.filter(function(r){return r.user_id===CU.id;});
+  var myBH=BH.filter(function(r){return r.user_id===CU.id;});
+  var myPM=PM.filter(function(r){return r.user_id===CU.id;});
+  if(t==='vac')document.getElementById('msVac').innerHTML=myAR.length===0?'<p style="color:#888;font-size:13px">Sin solicitudes.</p>':myAR.map(function(r){return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-weight:500;font-size:14px">'+r.from_date+' → '+r.to_date+(r.half_day?' <span style="font-size:11px;background:#E6F1FB;color:#185FA5;border-radius:4px;padding:1px 5px">½ día</span>':'')+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+r.days+' días</div><div style="font-size:12px;color:#888">Enviada: '+r.created_at+'</div>'+(r.comment?'<div style="font-size:12px;margin-top:4px;padding:4px 8px;background:#f5f5f3;border-radius:6px">Comentario: '+r.comment+'</div>':'')+'</div>'+bH(r.status)+'</div></div>';}).join('');
+  if(t==='banco')document.getElementById('msBanco').innerHTML=myBH.length===0?'<p style="color:#888;font-size:13px">Sin solicitudes.</p>':myBH.map(function(r){return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-weight:500;font-size:14px">'+r.horas+' horas · '+r.fecha_uso+'</div><div style="font-size:12px;color:#888">Enviada: '+r.created_at+'</div>'+(r.comment?'<div style="font-size:12px;margin-top:4px;padding:4px 8px;background:#f5f5f3;border-radius:6px">Comentario: '+r.comment+'</div>':'')+'</div>'+bH(r.status)+'</div></div>';}).join('');
+  if(t==='permiso')document.getElementById('msPermiso').innerHTML=myPM.length===0?'<p style="color:#888;font-size:13px">Sin solicitudes.</p>':myPM.map(function(r){return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-weight:500;font-size:14px">'+r.tipo+' · '+r.tipo_goce+'</div><div style="font-size:12px;color:#888">'+r.fecha_desde+' al '+r.fecha_hasta+'</div>'+(r.requiere_doc?'<div style="font-size:11px;color:#854F0B;margin-top:2px">⚠ Requiere documento soporte</div>':'')+(r.comment?'<div style="font-size:12px;margin-top:4px;padding:4px 8px;background:#f5f5f3;border-radius:6px">Comentario: '+r.comment+'</div>':'')+'</div>'+bH(r.status)+'</div></div>';}).join('');
+}
+
+// PENDIENTES
+function switchPtTab(t){
+  ['vac','banco','permiso'].forEach(function(x,i){document.getElementById('ptTab'+(i+1)).classList.toggle('active',x===t);document.getElementById('pt'+x.charAt(0).toUpperCase()+x.slice(1)).style.display=x===t?'block':'none';});
+  var pend=getPending(t);
+  var elId='pt'+t.charAt(0).toUpperCase()+t.slice(1);
+  var el=document.getElementById(elId);
+  if(pend.length===0){el.innerHTML='<p style="color:#888;font-size:13px">No hay solicitudes pendientes.</p>';return;}
+  if(t==='vac')el.innerHTML=pend.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});var av2=emp?emp.days-emp.used:0;return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+avH(emp?emp.avatar:'?',38)+'<div style="flex:1"><div style="font-weight:500;font-size:14px">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+(emp?emp.planta||'':'')+' · '+(emp?emp.dept:'')+' · '+r.from_date+' al '+r.to_date+(r.half_day?' (½ día)':'')+'</div><div style="font-size:12px;color:#888">'+r.days+' días · Disponibles: '+av2+'</div></div><button onclick="openModal('+r.id+',\'vac\')" style="font-size:12px;background:#EAF3DE;color:#3B6D11;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-weight:500;white-space:nowrap">Revisar</button></div></div>';}).join('');
+  if(t==='banco')el.innerHTML=pend.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});var avH2=emp?(emp.horas_banco||12)-(emp.horas_usadas||0):0;return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+avH(emp?emp.avatar:'?',38)+'<div style="flex:1"><div style="font-weight:500;font-size:14px">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+(emp?emp.planta||'':'')+' · Fecha: '+r.fecha_uso+' · '+r.horas+' horas · Disponibles: '+avH2+' hrs</div></div><button onclick="openModal('+r.id+',\'banco\')" style="font-size:12px;background:#EAF3DE;color:#3B6D11;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-weight:500;white-space:nowrap">Revisar</button></div></div>';}).join('');
+  if(t==='permiso')el.innerHTML=pend.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">'+avH(emp?emp.avatar:'?',38)+'<div style="flex:1"><div style="font-weight:500;font-size:14px">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+(emp?emp.planta||'':'')+' · '+r.tipo+' · '+r.tipo_goce+'</div><div style="font-size:12px;color:#888">'+r.fecha_desde+' al '+r.fecha_hasta+'</div>'+(r.requiere_doc?'<div style="font-size:11px;color:#854F0B">⚠ Requiere documento soporte</div>':'')+'</div><button onclick="openModal('+r.id+',\'permiso\')" style="font-size:12px;background:#EAF3DE;color:#3B6D11;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-weight:500;white-space:nowrap">Revisar</button></div></div>';}).join('');
+}
+
+// MODAL ACCIÓN
+function openModal(id,type){
+  aModalType=type;
+  var rec=type==='vac'?AR.find(function(r){return r.id===id;}):type==='banco'?BH.find(function(r){return r.id===id;}):PM.find(function(r){return r.id===id;});
+  if(!rec)return;aModal=rec;
+  var emp=AU.find(function(u){return u.id===rec.user_id;});
+  var info='<div style="font-size:14px;font-weight:500">'+(emp?emp.name:'')+'</div>';
+  if(type==='vac')info+='<div style="color:#888">'+rec.from_date+' al '+rec.to_date+(rec.half_day?' (½ día)':'')+' · '+rec.days+' días</div>';
+  else if(type==='banco')info+='<div style="color:#888">'+rec.horas+' horas · '+rec.fecha_uso+'</div>';
+  else info+='<div style="color:#888">'+rec.tipo+' · '+rec.tipo_goce+'</div><div style="color:#888">'+rec.fecha_desde+' al '+rec.fecha_hasta+'</div>'+(rec.requiere_doc?'<div style="color:#854F0B;font-size:12px">⚠ Requiere documento soporte</div>':'');
+  document.getElementById('modalInfo').innerHTML=info;
+  document.getElementById('modalComment').value='';
+  document.getElementById('actionModal').style.display='flex';
+}
+async function handleAction(action){
+  if(!aModal)return;
+  var comment=document.getElementById('modalComment').value;
+  try{
+    var tbl=aModalType==='vac'?'requests':aModalType==='banco'?'banco_horas':'permisos';
+    await sPatch(tbl,'id=eq.'+aModal.id,{status:action,comment:comment});
+    var emp=AU.find(function(u){return u.id===aModal.user_id;});
+    if(action==='approved'){
+      if(emp&&aModalType==='vac')await sPatch('users','id=eq.'+emp.id,{used:emp.used+aModal.days});
+      if(emp&&aModalType==='banco')await sPatch('users','id=eq.'+emp.id,{horas_usadas:(emp.horas_usadas||0)+aModal.horas});
+    }
+    if(emp&&emp.email){
+      var tipo=aModalType==='vac'?'Vacaciones':aModalType==='banco'?'Banco de Horas':'Permiso';
+      var fechas=aModalType==='vac'?aModal.from_date+' al '+aModal.to_date:aModalType==='banco'?aModal.fecha_uso:aModal.fecha_desde+' al '+aModal.fecha_hasta;
+      var estatus=action==='approved'?'✅ Aprobada':'❌ Rechazada';
+      await sendMail(emp.email,emp.name,'Solicitud '+estatus,action==='approved'?'Tu solicitud ha sido aprobada.':'Tu solicitud ha sido rechazada.'+(comment?' Comentario: '+comment:''),tipo,fechas,estatus);
+    }
+    closeModal('actionModal');await loadAll();updateNotifs();buildNav();switchPtTab(aModalType);
+  }catch(e){alert('Error al procesar.');}
+}
+
+// DASHBOARD
+function renderDash(){
+  var avail=CU.days-CU.used,hAvail=(CU.horas_banco||12)-(CU.horas_usadas||0);
+  document.getElementById('welcomeMsg').textContent='Bienvenido, '+CU.name.split(' ')[0];
+  document.getElementById('statsGrid').innerHTML=[{l:'Días vacaciones',v:avail,bg:'#EAF3DE',c:'#3B6D11'},{l:'Días usados',v:CU.used,bg:'#FAEEDA',c:'#854F0B'},{l:'Total asignados',v:CU.days,bg:'#E6F1FB',c:'#185FA5'},{l:'Horas banco',v:hAvail,bg:'#f1efe8',c:'#444'}].map(function(s){return'<div style="background:'+s.bg+';border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:'+s.c+';opacity:0.8;margin-bottom:4px">'+s.l+'</div><div style="font-size:26px;font-weight:500;color:'+s.c+'">'+s.v+'</div></div>';}).join('');
+  var myR=AR.filter(function(r){return r.user_id===CU.id;});
+  if(CU.role!=='admin'){
+    if(myR.length===0)document.getElementById('myRecentReqs').innerHTML='<p style="color:#888;font-size:13px">No tienes solicitudes. <a href="#" onclick="showView(\'vacaciones\');return false" style="color:#185FA5">Solicitar vacaciones</a></p>';
+    else document.getElementById('myRecentReqs').innerHTML='<h3 style="margin:0 0 10px;font-size:14px;font-weight:500;color:#888">Últimas solicitudes</h3>'+myR.slice(0,3).map(function(r){return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px;font-weight:500">'+r.from_date+' → '+r.to_date+'</div><div style="font-size:12px;color:#888">'+r.days+' días</div></div>'+bH(r.status)+'</div>';}).join('');
+  }else{document.getElementById('myRecentReqs').innerHTML='';}
+  var pc=getPending('vac').length+getPending('banco').length+getPending('permiso').length;
+  if((CU.role==='boss'||CU.role==='admin')&&pc>0)document.getElementById('pendingPreview').innerHTML='<div class="warn-box" style="margin-top:1rem">⚠ Tienes <strong>'+pc+' solicitudes pendientes</strong>. <a href="#" onclick="showView(\'pendientes\');return false" style="color:#854F0B;font-weight:500">Ver ahora →</a></div>';
+  else document.getElementById('pendingPreview').innerHTML='';
+}
+
+// RRHH
+function renderRRHH(){filtAR=AR.slice();populateFilters();applyFilters();}
+function populateFilters(){
+  var depts=[...new Set(AU.map(function(u){return u.dept;}))].sort();
+  document.getElementById('fDept').innerHTML='<option value="">Todos</option>'+depts.map(function(d){return'<option value="'+d+'">'+d+'</option>';}).join('');
+  document.getElementById('fEmp').innerHTML='<option value="">Todos</option>'+AU.map(function(u){return'<option value="'+u.id+'">'+u.name+'</option>';}).join('');
+}
+function applyFilters(){
+  var fF=document.getElementById('fFrom').value,fT=document.getElementById('fTo').value;
+  var fP=document.getElementById('fPlanta').value,fD=document.getElementById('fDept').value;
+  var fE=document.getElementById('fEmp').value,fS=document.getElementById('fStatus').value;
+  filtAR=AR.filter(function(r){
+    var emp=AU.find(function(u){return u.id===r.user_id;});
+    if(fF&&r.to_date<fF)return false;if(fT&&r.from_date>fT)return false;
+    if(fP&&emp&&(emp.planta||'')!==fP)return false;if(fD&&emp&&emp.dept!==fD)return false;
+    if(fE&&r.user_id!==parseInt(fE))return false;if(fS&&r.status!==fS)return false;
+    return true;
+  });
+  var visEmp=AU.filter(function(u){if(fP&&(u.planta||'')!==fP)return false;if(fD&&u.dept!==fD)return false;return true;});
+  var fEmpEl=document.getElementById('fEmp'),curV=fEmpEl.value;
+  fEmpEl.innerHTML='<option value="">Todos</option>'+visEmp.map(function(u){return'<option value="'+u.id+'"'+(curV==u.id?' selected':'')+'>'+u.name+'</option>';}).join('');
+  renderKpis();renderPlantaStats();renderWeek();renderCal();renderDeptGrid();renderFullTable();
+}
+function clearFilters(){['fFrom','fTo','fDept','fEmp','fStatus'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('fPlanta').value='';applyFilters();}
+function renderKpis(){
+  var today=new Date().toISOString().split('T')[0];
+  var ausT=AR.filter(function(r){return r.status==='approved'&&r.from_date<=today&&r.to_date>=today;});
+  var mon=getWeekStart(new Date()),sun=new Date(mon);sun.setDate(sun.getDate()+6);
+  var monS=mon.toISOString().split('T')[0],sunS=sun.toISOString().split('T')[0];
+  var ausW=AR.filter(function(r){return r.status==='approved'&&r.from_date<=sunS&&r.to_date>=monS;});
+  var pend=AR.filter(function(r){return r.status==='pending';}).length+BH.filter(function(r){return r.status==='pending';}).length+PM.filter(function(r){return r.status==='pending';}).length;
+  document.getElementById('rrhhKpis').innerHTML=[{l:'Ausentes hoy',v:ausT.length,bg:'#FCEBEB',c:'#A32D2D'},{l:'Ausentes esta semana',v:ausW.length,bg:'#FAEEDA',c:'#854F0B'},{l:'Solicitudes pendientes',v:pend,bg:'#E6F1FB',c:'#185FA5'},{l:'Total empleados',v:AU.length,bg:'#EAF3DE',c:'#3B6D11'}].map(function(s){return'<div style="background:'+s.bg+';border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:'+s.c+';opacity:0.8;margin-bottom:4px">'+s.l+'</div><div style="font-size:26px;font-weight:500;color:'+s.c+'">'+s.v+'</div></div>';}).join('');
+}
+function renderPlantaStats(){
+  ['Zubex Planta','Zubex CEDIS'].forEach(function(p,pi){
+    var id=pi===0?'plantaStats':'cedisStats';
+    var empls=AU.filter(function(u){return(u.planta||'Zubex Planta')===p;});
+    var today=new Date().toISOString().split('T')[0];
+    var ausH=AR.filter(function(r){return r.status==='approved'&&r.from_date<=today&&r.to_date>=today&&empls.find(function(u){return u.id===r.user_id;});});
+    var pend=AR.filter(function(r){return r.status==='pending'&&empls.find(function(u){return u.id===r.user_id;});});
+    document.getElementById(id).innerHTML='<div style="font-size:13px;color:#888;margin-bottom:4px">👥 Empleados: <strong>'+empls.length+'</strong></div><div style="font-size:13px;color:#888;margin-bottom:4px">🏖 Ausentes hoy: <strong>'+ausH.length+'</strong></div><div style="font-size:13px;color:#888">⏳ Pendientes: <strong>'+pend.length+'</strong></div>';
+  });
+}
+function getWeekStart(d){var day=d.getDay(),diff=d.getDate()-day;return new Date(new Date(d).setDate(diff));}
+function renderWeek(){
+  var mon=getWeekStart(new Date());var days=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  var rangeEnd=new Date(mon);rangeEnd.setDate(rangeEnd.getDate()+6);
+  document.getElementById('weekRangeLabel').textContent=mon.toLocaleDateString('es-MX',{day:'numeric',month:'long'})+' – '+rangeEnd.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+  var cols='';
+  for(var i=0;i<7;i++){
+    var d=new Date(mon);d.setDate(d.getDate()+i);var ds=d.toISOString().split('T')[0];
+    var isT=ds===new Date().toISOString().split('T')[0];
+    var fest=DF.find(function(f){return f.fecha===ds;});
+    var out=AR.filter(function(r){return r.status==='approved'&&r.from_date<=ds&&r.to_date>=ds;});
+    cols+='<div class="wc" style="'+(isT?'border:2px solid #185FA5':'')+(fest?';background:#FFF3CD':'')+'"><div class="wch">'+days[d.getDay()]+' '+d.getDate()+(fest?' 🎉':'')+'</div>';
+    if(fest)cols+='<div style="font-size:10px;color:#854F0B;margin-bottom:3px">'+fest.nombre+'</div>';
+    if(out.length===0)cols+='<div style="font-size:11px;color:#bbb;text-align:center">–</div>';
+    else out.forEach(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});cols+='<div class="we">'+(emp?emp.name.split(' ')[0]:'?')+'</div>';});
+    cols+='</div>';
+  }
+  document.getElementById('weekGrid').innerHTML=cols;
+}
+function renderCal(){
+  var title=new Date(calY,calM).toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+  document.getElementById('calTitle').textContent=title.charAt(0).toUpperCase()+title.slice(1);
+  var firstDay=new Date(calY,calM,1).getDay(),dim=new Date(calY,calM+1,0).getDate(),dip=new Date(calY,calM,0).getDate();
+  var today=new Date().toISOString().split('T')[0];var html='';var total=firstDay+dim;var cells=total<=35?35:42;
+  for(var i=0;i<cells;i++){
+    var day,month=calM,year=calY,other=false;
+    if(i<firstDay){day=dip-firstDay+i+1;month=calM-1;if(month<0){month=11;year--;}other=true;}
+    else if(i>=firstDay+dim){day=i-firstDay-dim+1;month=calM+1;if(month>11){month=0;year++;}other=true;}
+    else{day=i-firstDay+1;}
+    var ds=year+'-'+(month+1<10?'0'+(month+1):month+1)+'-'+(day<10?'0'+day:day);
+    var isT=ds===today;var fest=DF.find(function(f){return f.fecha===ds;});
+    var out=filtAR.filter(function(r){return r.status==='approved'&&r.from_date<=ds&&r.to_date>=ds;});
+    html+='<div class="cal-day'+(other?' other-month':'')+(isT?' today':'')+'" style="'+(fest?'background:#FFF3CD;':'')+'">';
+    html+='<div style="font-weight:'+(isT?700:400)+';color:'+(isT?'#185FA5':fest?'#854F0B':'#444')+'">'+day+'</div>';
+    if(fest)html+='<span style="font-size:9px;background:#FAEEDA;color:#854F0B;border-radius:3px;padding:1px 3px;display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">🎉 '+fest.nombre+'</span>';
+    out.slice(0,2).forEach(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});html+='<span class="cal-dot">'+(emp?emp.name.split(' ')[0]:'?')+'</span>';});
+    if(out.length>2)html+='<span style="font-size:10px;color:#888">+'+(out.length-2)+' más</span>';
+    html+='</div>';
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+function prevMonth(){calM--;if(calM<0){calM=11;calY--;}renderCal();}
+function nextMonth(){calM++;if(calM>11){calM=0;calY++;}renderCal();}
+function renderDeptGrid(){
+  var depts={};
+  filtAR.filter(function(r){return r.status==='approved';}).forEach(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});if(!emp)return;if(!depts[emp.dept])depts[emp.dept]={days:0,emps:[]};depts[emp.dept].days+=r.days;if(depts[emp.dept].emps.indexOf(emp.name)<0)depts[emp.dept].emps.push(emp.name);});
+  var keys=Object.keys(depts);
+  document.getElementById('deptGrid').innerHTML=keys.length===0?'<p style="color:#888;font-size:13px">Sin datos.</p>':keys.map(function(d){var info=depts[d],total=AU.filter(function(u){return u.dept===d;}).length,pct=total?Math.round(info.emps.length/total*100):0;return'<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;font-weight:500">'+d+'</span><span style="font-size:12px;color:#888">'+info.emps.length+' empleados · '+info.days+' días</span></div><div style="background:#f1efe8;border-radius:20px;height:8px"><div style="background:#185FA5;border-radius:20px;height:8px;width:'+pct+'%"></div></div><div style="font-size:11px;color:#888;margin-top:3px">'+pct+'% del departamento ha tomado vacaciones</div></div>';}).join('');
+}
+function renderFullTable(){
+  document.getElementById('fullTableBody').innerHTML=filtAR.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<tr><td>'+(emp?emp.name:'?')+'</td><td>'+(emp?emp.planta||'':'?')+'</td><td>'+(emp?emp.dept:'?')+'</td><td>'+fd(r.from_date)+'</td><td>'+fd(r.to_date)+'</td><td>'+r.days+(r.half_day?' (½)':'')+'</td><td>'+r.reason+'</td><td>'+bH(r.status)+'</td></tr>';}).join('')||'<tr><td colspan="8" style="text-align:center;color:#888;padding:1rem">Sin resultados</td></tr>';
+  document.getElementById('permisosTableBody').innerHTML=PM.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<tr><td>'+(emp?emp.name:'?')+'</td><td>'+(emp?emp.planta||'':'?')+'</td><td>'+r.tipo+'</td><td>'+r.tipo_goce+'</td><td>'+fd(r.fecha_desde)+'</td><td>'+fd(r.fecha_hasta)+'</td><td>'+bH(r.status)+'</td></tr>';}).join('')||'<tr><td colspan="7" style="text-align:center;color:#888;padding:1rem">Sin permisos</td></tr>';
+  document.getElementById('bancoTableBody').innerHTML=BH.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<tr><td>'+(emp?emp.name:'?')+'</td><td>'+(emp?emp.planta||'':'?')+'</td><td>'+fd(r.fecha_uso)+'</td><td>'+r.horas+'</td><td>'+bH(r.status)+'</td></tr>';}).join('')||'<tr><td colspan="5" style="text-align:center;color:#888;padding:1rem">Sin solicitudes</td></tr>';
+}
+function exportCSV(){
+  var rows=[['Empleado','Planta','Depto','Desde','Hasta','Días','Motivo','Estatus']];
+  filtAR.forEach(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});rows.push([emp?emp.name:'?',emp?emp.planta||'':'?',emp?emp.dept:'?',r.from_date,r.to_date,r.days,r.reason,r.status]);});
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));a.download='vacaciones_zubex_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+}
+
+// ADMIN
+function renderAdmin(){
+  var t=document.getElementById('tabUsersBtn').classList.contains('active')?'users':document.getElementById('tabReqsBtn').classList.contains('active')?'allRequests':'festivos';
+  if(t==='users')renderAdminUsers();else if(t==='allRequests')renderAdminReqs();else renderAdminFestivos();
+}
+function switchAdminTab(t){
+  document.getElementById('tabUsersBtn').classList.toggle('active',t==='users');document.getElementById('tabReqsBtn').classList.toggle('active',t==='allRequests');document.getElementById('tabFestBtn').classList.toggle('active',t==='festivos');
+  document.getElementById('adminUsers').style.display=t==='users'?'block':'none';document.getElementById('adminAllReqs').style.display=t==='allRequests'?'block':'none';document.getElementById('adminFestivos').style.display=t==='festivos'?'block':'none';
+  if(t==='users')renderAdminUsers();else if(t==='allRequests')renderAdminReqs();else renderAdminFestivos();
+}
+function renderAdminUsers(){
+  var bossList=AU.filter(function(u){return u.role==='boss';});
+  document.getElementById('adminUsers').innerHTML=AU.map(function(u){return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center">'+avH(u.avatar,34)+'<div><div style="font-size:14px;font-weight:500">'+u.name+'</div><div style="font-size:12px;color:#888">'+u.user_name+' · '+u.dept+' · '+(u.planta||'Zubex Planta')+'</div></div></div><div style="display:flex;align-items:center;gap:6px"><div style="text-align:right;margin-right:4px"><span style="font-size:12px;background:#E6F1FB;color:#185FA5;border-radius:20px;padding:2px 8px">'+u.role+'</span><div style="font-size:12px;color:#888;margin-top:2px">'+(u.days-u.used)+'d · '+((u.horas_banco||12)-(u.horas_usadas||0))+'h</div></div><button class="btn-e" onclick="openEditModal('+u.id+')">Editar</button><button class="btn-de" onclick="openDeleteModal('+u.id+')">Eliminar</button></div></div></div>';}).join('')+
+  '<div class="card" style="margin-top:1.5rem"><h3 style="margin:0 0 12px;font-size:15px;font-weight:500">Agregar empleado</h3>'+
+  '<div class="fr"><div><label>Nombre completo</label><input id="nu_name" placeholder="Juan Pérez"/></div><div><label>Usuario</label><input id="nu_user" placeholder="juan.perez" autocapitalize="none"/></div></div>'+
+  '<div class="fr" style="margin-top:4px"><div><label>Contraseña</label><input id="nu_pass" type="password"/></div><div><label>Departamento</label><input id="nu_dept" placeholder="Ventas"/></div></div>'+
+  '<div style="margin-top:4px"><label>Correo electrónico</label><input id="nu_email" type="email" placeholder="correo@zubex.com"/></div>'+
+  '<div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="nu_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="nu_role"><option value="employee">Empleado</option><option value="boss">Jefe</option><option value="admin">Admin</option></select></div></div>'+
+  '<div class="fr" style="margin-top:4px"><div><label>Jefe directo</label><select id="nu_boss"><option value="">Sin jefe</option>'+bossList.map(function(b){return'<option value="'+b.id+'">'+b.name+'</option>';}).join('')+'</select></div><div><label>Descanso 1</label><select id="nu_desc1"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div></div>'+
+  '<div class="fr" style="margin-top:4px"><div><label>Descanso 2</label><select id="nu_desc2"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div><label>Días vacaciones</label><input id="nu_days" type="number" value="15"/></div></div>'+
+  '<p id="newUserMsg" style="font-size:13px;margin:8px 0 0;display:none"></p>'+
+  '<button class="btn-p" onclick="addUser()" style="margin-top:12px;font-size:13px;padding:8px 18px">Crear usuario</button></div>';
+}
+function renderAdminReqs(){
+  document.getElementById('adminAllReqs').innerHTML=
+    '<h4 style="margin-bottom:8px;font-size:14px">Vacaciones</h4>'+AR.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+' <span style="color:#888;font-weight:400">('+( emp?emp.dept:'')+')</span></div><div style="font-size:12px;color:#888">'+r.from_date+' → '+r.to_date+' · '+r.days+' días</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button onclick="openModal('+r.id+',\'vac\')" style="font-size:11px;background:#E6F1FB;color:#185FA5;border:none;border-radius:5px;padding:3px 8px;cursor:pointer">Gestionar</button>':'')+'</div></div>';}).join('')+
+    '<h4 style="margin:1rem 0 8px;font-size:14px">Banco de Horas</h4>'+BH.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+r.horas+' horas · '+r.fecha_uso+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button onclick="openModal('+r.id+',\'banco\')" style="font-size:11px;background:#E6F1FB;color:#185FA5;border:none;border-radius:5px;padding:3px 8px;cursor:pointer">Gestionar</button>':'')+'</div></div>';}).join('')+
+    '<h4 style="margin:1rem 0 8px;font-size:14px">Permisos</h4>'+PM.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+r.tipo+' · '+r.tipo_goce+' · '+r.fecha_desde+' al '+r.fecha_hasta+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button onclick="openModal('+r.id+',\'permiso\')" style="font-size:11px;background:#E6F1FB;color:#185FA5;border:none;border-radius:5px;padding:3px 8px;cursor:pointer">Gestionar</button>':'')+'</div></div>';}).join('');
+}
+function renderAdminFestivos(){
+  var el=document.getElementById('adminFestivos');
+  el.innerHTML=(DF.length===0?'<p style="color:#888;font-size:13px">No hay días festivos.</p>':DF.map(function(f){return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px;font-weight:500">🎉 '+f.nombre+'</div><div style="font-size:12px;color:#888">'+f.fecha+'</div></div><button onclick="delFestivo('+f.id+')" class="btn-de">Eliminar</button></div>';}).join(''))+
+  '<div class="card" style="margin-top:1rem"><h3 style="margin:0 0 12px;font-size:15px;font-weight:500">Agregar día festivo</h3>'+
+  '<div class="fr"><div><label>Fecha</label><input type="date" id="nf_fecha"/></div><div><label>Nombre</label><input id="nf_nombre" placeholder="Ej. Día de la Independencia"/></div></div>'+
+  '<p id="festMsg" style="font-size:13px;margin:8px 0 0;display:none"></p>'+
+  '<button class="btn-p" onclick="addFestivo()" style="margin-top:12px;font-size:13px;padding:8px 18px">Agregar festivo</button></div>';
+}
+async function addFestivo(){
+  var fecha=document.getElementById('nf_fecha').value,nombre=document.getElementById('nf_nombre').value.trim();
+  var msg=document.getElementById('festMsg');
+  if(!fecha||!nombre){msg.style.color='#A32D2D';msg.textContent='Completa fecha y nombre.';msg.style.display='block';return;}
+  try{await sPost('dias_festivos',{fecha:fecha,nombre:nombre,created_by:CU.id,created_at:new Date().toISOString().split('T')[0]});msg.style.color='#3B6D11';msg.textContent='Festivo agregado.';msg.style.display='block';await loadAll();renderAdminFestivos();}
+  catch(e){msg.style.color='#A32D2D';msg.textContent='Error.';msg.style.display='block';}
+}
+async function delFestivo(id){if(!confirm('¿Eliminar este día festivo?'))return;await sDel('dias_festivos','id=eq.'+id);await loadAll();renderAdminFestivos();}
+
+function openEditModal(uid){
+  var u=AU.find(function(x){return x.id===uid;});if(!u)return;editT=u;
+  document.getElementById('edit_id').value=u.id;document.getElementById('edit_name').value=u.name;document.getElementById('edit_user').value=u.user_name;document.getElementById('edit_pass').value='';document.getElementById('edit_dept').value=u.dept;document.getElementById('edit_email').value=u.email||'';document.getElementById('edit_role').value=u.role;document.getElementById('edit_days').value=u.days;document.getElementById('edit_used').value=u.used;document.getElementById('edit_horas').value=u.horas_banco||12;document.getElementById('edit_horasU').value=u.horas_usadas||0;document.getElementById('edit_planta').value=u.planta||'Zubex Planta';document.getElementById('edit_desc1').value=u.dia_descanso||'';document.getElementById('edit_desc2').value=u.dia_descanso2||'';
+  var bossSel=document.getElementById('edit_boss');var bossList=AU.filter(function(x){return x.role==='boss'&&x.id!==uid;});
+  bossSel.innerHTML='<option value="">Sin jefe</option>'+bossList.map(function(b){return'<option value="'+b.id+'"'+(u.boss===b.id?' selected':'')+'>'+b.name+'</option>';}).join('');
+  document.getElementById('editMsg').style.display='none';document.getElementById('editModal').style.display='flex';
+}
+async function saveEditUser(){
+  var id=parseInt(document.getElementById('edit_id').value);
+  var name=document.getElementById('edit_name').value.trim(),uname=document.getElementById('edit_user').value.trim().toLowerCase(),pass=document.getElementById('edit_pass').value.trim(),dept=document.getElementById('edit_dept').value.trim(),email=document.getElementById('edit_email').value.trim(),role=document.getElementById('edit_role').value,boss=document.getElementById('edit_boss').value,days=parseInt(document.getElementById('edit_days').value)||15,used=parseInt(document.getElementById('edit_used').value)||0,horas=parseFloat(document.getElementById('edit_horas').value)||12,horasU=parseFloat(document.getElementById('edit_horasU').value)||0,planta=document.getElementById('edit_planta').value,desc1=document.getElementById('edit_desc1').value,desc2=document.getElementById('edit_desc2').value;
+  var msg=document.getElementById('editMsg');
+  if(!name||!uname||!dept){msg.style.color='#A32D2D';msg.textContent='Completa los campos obligatorios.';msg.style.display='block';return;}
+  var initials=name.split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
+  var payload={name:name,user_name:uname,dept:dept,role:role,boss:boss?parseInt(boss):null,days:days,used:used,avatar:initials,horas_banco:horas,horas_usadas:horasU,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,email:email};
+  if(pass)payload.pass=pass;
+  try{
+    await sPatch('users','id=eq.'+id,payload);
+    if(id===CU.id){var fresh=Object.assign({},CU,payload);CU=fresh;document.getElementById('headerAvatar').textContent=CU.avatar;document.getElementById('headerName').textContent=CU.name;}
+    msg.style.color='#3B6D11';msg.textContent='Cambios guardados.';msg.style.display='block';
+    await loadAll();renderAdminUsers();buildNav();setTimeout(function(){closeModal('editModal');},800);
+  }catch(e){msg.style.color='#A32D2D';msg.textContent='Error al guardar.';msg.style.display='block';}
+}
+function openDeleteModal(uid){var u=AU.find(function(x){return x.id===uid;});if(!u)return;delT=u;document.getElementById('deleteMsg').textContent='¿Eliminar a "'+u.name+'"? Esta acción no se puede deshacer.';document.getElementById('deleteModal').style.display='flex';}
+async function confirmDelete(){if(!delT)return;try{await sDel('requests','user_id=eq.'+delT.id);await sDel('banco_horas','user_id=eq.'+delT.id);await sDel('permisos','user_id=eq.'+delT.id);await sDel('users','id=eq.'+delT.id);closeModal('deleteModal');await loadAll();renderAdminUsers();buildNav();}catch(e){alert('Error al eliminar.');}}
+async function addUser(){
+  var name=document.getElementById('nu_name').value.trim(),uname=document.getElementById('nu_user').value.trim().toLowerCase(),pass=document.getElementById('nu_pass').value.trim(),dept=document.getElementById('nu_dept').value.trim(),email=document.getElementById('nu_email').value.trim(),planta=document.getElementById('nu_planta').value,role=document.getElementById('nu_role').value,boss=document.getElementById('nu_boss').value,desc1=document.getElementById('nu_desc1').value,desc2=document.getElementById('nu_desc2').value,days=parseInt(document.getElementById('nu_days').value)||15;
+  var msg=document.getElementById('newUserMsg');
+  if(!name||!uname||!pass||!dept){msg.style.color='#A32D2D';msg.textContent='Completa todos los campos.';msg.style.display='block';return;}
+  var initials=name.split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
+  try{await sPost('users',{name:name,user_name:uname,pass:pass,role:role,dept:dept,boss:boss?parseInt(boss):null,days:days,used:0,avatar:initials,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,horas_banco:12,horas_usadas:0,email:email});msg.style.color='#3B6D11';msg.textContent='Usuario creado exitosamente.';msg.style.display='block';await loadAll();renderAdminUsers();buildNav();}
+  catch(e){msg.style.color='#A32D2D';msg.textContent='Error. El usuario puede ya existir.';msg.style.display='block';}
+}
+
+function updateNotifs(){
+  var notifs=[];
+  if(CU.role==='employee'){
+    AR.filter(function(r){return r.user_id===CU.id&&r.status!=='pending';}).forEach(function(r){notifs.push({text:'Vacaciones del '+r.from_date+' '+(r.status==='approved'?'aprobadas':'rechazadas'),status:r.status});});
+    BH.filter(function(r){return r.user_id===CU.id&&r.status!=='pending';}).forEach(function(r){notifs.push({text:'Banco de horas ('+r.horas+'h) '+(r.status==='approved'?'aprobado':'rechazado'),status:r.status});});
+    PM.filter(function(r){return r.user_id===CU.id&&r.status!=='pending';}).forEach(function(r){notifs.push({text:'Permiso '+r.tipo+' '+(r.status==='approved'?'aprobado':'rechazado'),status:r.status});});
+  }
+  if(CU.role==='boss'||CU.role==='admin'){var pc=getPending('vac').length+getPending('banco').length+getPending('permiso').length;if(pc>0)notifs.push({text:pc+' solicitudes pendientes por revisar',status:'pending'});}
+  var badge=document.getElementById('notifBadge');
+  if(notifs.length>0){badge.style.display='flex';badge.textContent=notifs.length;}else{badge.style.display='none';}
+  document.getElementById('notifList').innerHTML=notifs.length===0?'<div style="padding:14px;font-size:13px;color:#888">Sin notificaciones</div>':notifs.map(function(n){return'<div style="padding:10px 14px;border-bottom:1px solid rgba(0,0,0,0.08);font-size:13px"><div style="margin-bottom:4px">'+n.text+'</div>'+bH(n.status)+'</div>';}).join('');
+}
+function toggleNotifs(){var p=document.getElementById('notifPanel');p.style.display=p.style.display==='none'?'block':'none';}
+document.addEventListener('click',function(e){var w=document.getElementById('notifWrapper'),p=document.getElementById('notifPanel');if(p&&p.style.display==='block'&&w&&!w.contains(e.target))p.style.display='none';});
+</script>
+</body>
+</html>
