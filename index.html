@@ -70,7 +70,7 @@ body.dark #wm span{color:#5ba3e0}
 body.dark .info-box{background:#1a2e40;color:#7ab8e0}
 body.dark .warn-box{background:#2e2010;color:#e0a050}
 body.dark label{color:#aaa}
-@media(max-width:600px){.fr{grid-template-columns:1fr}.nh{display:none}.week-row{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:600px){.fr{grid-template-columns:1fr}.nh{display:none}.week-row{grid-template-columns:repeat(4,1fr)}#lobbyGrid{grid-template-columns:1fr!important}}
 @media print{.hdr,#navBar,#wm,.no-print{display:none!important}.cnt{padding:0}}
 </style>
 </head>
@@ -131,7 +131,86 @@ body.dark label{color:#aaa}
   </div>
   <div id="navBar" style="border-bottom:1px solid rgba(0,0,0,0.1);display:flex;background:#fff;padding-left:1rem;position:sticky;top:52px;z-index:99;overflow-x:auto"></div>
   <div class="cnt">
-    <div id="vDashboard" class="screen active"><h2 style="margin:0 0 1rem;font-size:17px;font-weight:500" id="welcomeMsg"></h2><div class="gs" id="statsGrid"></div><div id="myRecentReqs"></div><div id="pendingPreview"></div></div>
+    <!-- INICIO / LOBBY -->
+    <div id="vDashboard" class="screen active">
+      <!-- Bienvenida + stats personales -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
+        <div>
+          <h2 style="font-size:20px;font-weight:600;margin:0" id="welcomeMsg"></h2>
+          <p id="welcomeSub" style="font-size:13px;color:#888;margin:2px 0 0"></p>
+        </div>
+        <div id="misSolicitudesQuick" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
+      <div class="gs" id="statsGrid" style="margin-bottom:1.5rem"></div>
+
+      <!-- Grid principal -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem" id="lobbyGrid">
+
+        <!-- Columna izquierda -->
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <!-- Cumpleaños del mes -->
+          <div class="card" style="margin-bottom:0">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">🎂 Cumpleaños del mes</div>
+            <div id="birthdayList"></div>
+          </div>
+          <!-- Aniversarios -->
+          <div class="card" style="margin-bottom:0">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">🎉 Aniversarios del mes</div>
+            <div id="anniversaryList"></div>
+          </div>
+          <!-- Nuevos ingresos -->
+          <div class="card" style="margin-bottom:0">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">🆕 Nuevos ingresos</div>
+            <div id="newEmployeesList"></div>
+          </div>
+        </div>
+
+        <!-- Columna central -->
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <!-- Anuncios -->
+          <div class="card" style="margin-bottom:0">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">📢 Anuncios</div>
+            <div id="anunciosList"></div>
+            <div id="anunciosEmpty" style="font-size:13px;color:#888;display:none">Sin anuncios recientes.</div>
+          </div>
+        </div>
+
+        <!-- Columna derecha -->
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <!-- Fuera de oficina -->
+          <div class="card" style="margin-bottom:0">
+            <div style="font-size:14px;font-weight:600;margin-bottom:6px">🏖 Fuera de oficina hoy</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <button type="button" id="fooTodos" onclick="switchFoo('todos')" style="font-size:12px;border:none;border-radius:20px;padding:3px 10px;cursor:pointer;background:#185FA5;color:#fff">Todos</button>
+              <button type="button" id="fooEquipo" onclick="switchFoo('equipo')" style="font-size:12px;border:none;border-radius:20px;padding:3px 10px;cursor:pointer;background:#f1efe8;color:#666">Mi equipo</button>
+            </div>
+            <div id="fooList"></div>
+          </div>
+          <!-- Próximos festivos -->
+          <div class="card" style="margin-bottom:0">
+            <div style="font-size:14px;font-weight:600;margin-bottom:10px">📅 Próximos días festivos</div>
+            <div id="festivosList"></div>
+          </div>
+          <!-- Pendientes para jefe/admin -->
+          <div id="pendingPreview"></div>
+        </div>
+      </div>
+
+      <!-- Admin: subir anuncio -->
+      <div id="adminAnuncioBox" style="display:none;margin-top:1rem">
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px">➕ Publicar anuncio</div>
+          <div><label>Título</label><input id="an_titulo" placeholder="Título del anuncio"/></div>
+          <div><label>Contenido</label><textarea id="an_contenido" rows="3" style="resize:vertical" placeholder="Escribe el mensaje..."></textarea></div>
+          <div><label>URL de imagen (opcional)</label><input id="an_imagen" placeholder="https://..."/></div>
+          <div><label>Tipo</label>
+            <select id="an_tipo"><option value="general">General</option><option value="urgente">Urgente</option><option value="evento">Evento</option></select>
+          </div>
+          <p id="anuncioMsg" style="font-size:13px;margin:8px 0 0;display:none"></p>
+          <button type="button" class="btn-p" onclick="publicarAnuncio()" style="margin-top:12px">Publicar</button>
+        </div>
+      </div>
+    </div>
     <div id="vVacaciones" class="screen">
       <h2 style="margin:0 0 1rem;font-size:17px;font-weight:500">Solicitud de Vacaciones</h2>
       <div class="info-box">📋 Solicita con anticipación conforme a tu plan anual.</div>
@@ -305,7 +384,7 @@ async function sPatch(t,f,d){var r=await fetch(SB+'/rest/v1/'+t+'?'+f,{method:'P
 async function sDel(t,f){await fetch(SB+'/rest/v1/'+t+'?'+f,{method:'DELETE',headers:sbH()});}
 
 // STATE
-var CU=null,AU=[],AR=[],BH=[],PM=[],DF=[],aModal=null,aModalType='vac',editT=null,delT=null;
+var CU=null,AU=[],AR=[],BH=[],PM=[],DF=[],AN=[],aModal=null,aModalType='vac',editT=null,delT=null;
 var calY=new Date().getFullYear(),calM=new Date().getMonth(),filtAR=[];
 
 // TABLA VACACIONES
@@ -391,6 +470,7 @@ async function loadAll(){
   BH=await sGet('banco_horas','select=*&order=id.desc');
   PM=await sGet('permisos','select=*&order=id.desc');
   DF=await sGet('dias_festivos','select=*&order=fecha.asc');
+  AN=await sGet('anuncios','select=*&order=id.desc&activo=eq.true');
   var f=AU.find(function(u){return u.id===CU.id;});if(f)CU=f;
   filtAR=AR.slice();
 }
@@ -612,8 +692,14 @@ async function handleAction(action){
     await sPatch(tbl,'id=eq.'+aModal.id,{status:action,comment:comment});
     var emp=AU.find(function(u){return u.id===aModal.user_id;});
     if(action==='approved'){
-      if(emp&&aModalType==='vac')await sPatch('users','id=eq.'+emp.id,{used:parseFloat(emp.used)+parseFloat(aModal.days)});
-      if(emp&&aModalType==='banco')await sPatch('users','id=eq.'+emp.id,{horas_usadas:parseFloat(emp.horas_usadas||0)+parseFloat(aModal.horas)});
+      if(emp&&aModalType==='vac'){
+        var nuevoUsed=Math.round((parseFloat(emp.used||0)+parseFloat(aModal.days))*10)/10;
+        await sPatch('users','id=eq.'+emp.id,{used:nuevoUsed});
+      }
+      if(emp&&aModalType==='banco'){
+        var nuevoHoras=Math.round((parseFloat(emp.horas_usadas||0)+parseFloat(aModal.horas))*10)/10;
+        await sPatch('users','id=eq.'+emp.id,{horas_usadas:nuevoHoras});
+      }
     }
     if(emp&&emp.email){
       var tipo=aModalType==='vac'?'Vacaciones':aModalType==='banco'?'Banco de Horas':'Permiso';
@@ -625,13 +711,24 @@ async function handleAction(action){
   }catch(e){alert('Error al procesar.');}
 }
 
-// DASHBOARD
+// DASHBOARD / LOBBY
 function renderDash(){
   var anios=calcAnios(CU.fecha_ingreso);
   var diasC=getDiasVac(anios);
   var avail=diasC-parseFloat(CU.used||0);
   var hAvail=parseFloat(CU.horas_banco||12)-parseFloat(CU.horas_usadas||0);
-  document.getElementById('welcomeMsg').textContent='Bienvenido, '+CU.name.split(' ')[0];
+
+  // Bienvenida
+  var hoy=new Date();
+  var hora=hoy.getHours();
+  var saludo;
+  if(hora<12)saludo='¡Buenos días';
+  else if(hora<18)saludo='¡Buenas tardes';
+  else saludo='¡Buenas noches';
+  document.getElementById('welcomeMsg').textContent=saludo+', '+CU.name.split(' ')[0]+'!';
+  document.getElementById('welcomeSub').textContent=hoy.toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  // Stats personales
   var stats=[
     {l:'Días disponibles',v:fmtDias(avail),bg:avail<0?'#FCEBEB':'#EAF3DE',c:avail<0?'#A32D2D':'#3B6D11'},
     {l:'Días usados',v:fmtDias(CU.used),bg:'#FAEEDA',c:'#854F0B'},
@@ -639,14 +736,135 @@ function renderDash(){
     {l:'Antigüedad',v:anios+' año'+(anios!==1?'s':''),bg:'#f1efe8',c:'#444'}
   ];
   document.getElementById('statsGrid').innerHTML=stats.map(function(s){return'<div style="background:'+s.bg+';border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:'+s.c+';opacity:0.8;margin-bottom:4px">'+s.l+'</div><div style="font-size:22px;font-weight:500;color:'+s.c+'">'+s.v+'</div></div>';}).join('');
+
+  // Botones rápidos
   var myR=AR.filter(function(r){return r.user_id===CU.id;});
   if(CU.role!=='admin'){
-    if(myR.length===0)document.getElementById('myRecentReqs').innerHTML='<p style="color:#888;font-size:13px">Sin solicitudes. <a href="#" onclick="showView(\'vacaciones\');return false" style="color:#185FA5">Solicitar vacaciones</a></p>';
-    else document.getElementById('myRecentReqs').innerHTML='<h3 style="margin:0 0 10px;font-size:14px;font-weight:500;color:#888">Últimas solicitudes</h3>'+myR.slice(0,3).map(function(r){return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px;font-weight:500">'+r.from_date+' → '+r.to_date+'</div><div style="font-size:12px;color:#888">'+r.days+' días</div></div>'+bH(r.status)+'</div>';}).join('');
-  }else document.getElementById('myRecentReqs').innerHTML='';
+    document.getElementById('misSolicitudesQuick').innerHTML=myR.slice(0,2).map(function(r){return'<div style="background:#f5f5f3;border-radius:8px;padding:6px 12px;font-size:12px"><span style="color:#888">'+r.from_date+' → '+r.to_date+'</span> '+bH(r.status)+'</div>';}).join('');
+  }
+
+  // Admin: mostrar caja de anuncios
+  if(CU.role==='admin'){document.getElementById('adminAnuncioBox').style.display='block';}
+
+  // Pendientes para jefe/admin
   var pc=getPending('vac').length+getPending('banco').length+getPending('permiso').length;
-  if((CU.role==='boss'||CU.role==='admin')&&pc>0)document.getElementById('pendingPreview').innerHTML='<div class="warn-box" style="margin-top:1rem">⚠ Tienes <strong>'+pc+' solicitudes pendientes</strong>. <a href="#" onclick="showView(\'pendientes\');return false" style="color:#854F0B;font-weight:500">Ver ahora →</a></div>';
+  if((CU.role==='boss'||CU.role==='admin')&&pc>0)
+    document.getElementById('pendingPreview').innerHTML='<div class="warn-box">⚠ Tienes <strong>'+pc+' solicitudes pendientes</strong>. <a href="#" onclick="showView(\'pendientes\');return false" style="color:#854F0B;font-weight:500">Ver ahora →</a></div>';
   else document.getElementById('pendingPreview').innerHTML='';
+
+  renderBirthdays();
+  renderAnniversaries();
+  renderNewEmployees();
+  renderFooList('todos');
+  renderFestivos();
+  renderAnuncios();
+}
+
+function renderBirthdays(){
+  var hoy=new Date();var mes=hoy.getMonth()+1;var diaHoy=hoy.getDate();
+  var cumples=AU.filter(function(u){
+    if(!u.fecha_nacimiento)return false;
+    var p=u.fecha_nacimiento.split('-');return parseInt(p[1])===mes;
+  }).sort(function(a,b){return parseInt(a.fecha_nacimiento.split('-')[2])-parseInt(b.fecha_nacimiento.split('-')[2]);});
+  if(cumples.length===0){document.getElementById('birthdayList').innerHTML='<p style="color:#888;font-size:13px">Sin cumpleaños este mes.</p>';return;}
+  document.getElementById('birthdayList').innerHTML=cumples.map(function(u){
+    var dia=parseInt(u.fecha_nacimiento.split('-')[2]);
+    var esHoy=dia===diaHoy;
+    return'<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">'+avH(u.avatar,32)+'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+u.name+'</div><div style="font-size:11px;color:#888">'+u.dept+'</div></div>'+(esHoy?'<span style="background:#FAEEDA;color:#854F0B;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500">HOY 🎂</span>':'<span style="font-size:12px;color:#888">día '+dia+'</span>')+'</div>';
+  }).join('');
+}
+
+function renderAnniversaries(){
+  var hoy=new Date();var mes=hoy.getMonth()+1;var diaHoy=hoy.getDate();
+  var anis=AU.filter(function(u){
+    if(!u.fecha_ingreso)return false;
+    var p=u.fecha_ingreso.split('-');return parseInt(p[1])===mes;
+  }).sort(function(a,b){return parseInt(a.fecha_ingreso.split('-')[2])-parseInt(b.fecha_ingreso.split('-')[2]);});
+  if(anis.length===0){document.getElementById('anniversaryList').innerHTML='<p style="color:#888;font-size:13px">Sin aniversarios este mes.</p>';return;}
+  document.getElementById('anniversaryList').innerHTML=anis.map(function(u){
+    var anios=calcAnios(u.fecha_ingreso);
+    var dia=parseInt(u.fecha_ingreso.split('-')[2]);
+    var esHoy=dia===diaHoy;
+    return'<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">'+avH(u.avatar,32)+'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+u.name+'</div><div style="font-size:11px;color:#888">'+anios+' año'+(anios!==1?'s':'')+' · '+u.dept+'</div></div>'+(esHoy?'<span style="background:#EAF3DE;color:#3B6D11;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500">HOY 🎉</span>':'<span style="font-size:12px;color:#888">día '+dia+'</span>')+'</div>';
+  }).join('');
+}
+
+function renderNewEmployees(){
+  var hoy=new Date();
+  var nuevos=AU.filter(function(u){
+    if(!u.fecha_ingreso)return false;
+    var ing=new Date(u.fecha_ingreso);
+    return(hoy-ing)/86400000<=30;
+  });
+  if(nuevos.length===0){document.getElementById('newEmployeesList').innerHTML='<p style="color:#888;font-size:13px">Sin nuevos ingresos.</p>';return;}
+  document.getElementById('newEmployeesList').innerHTML=nuevos.map(function(u){
+    var dias=Math.floor((hoy-new Date(u.fecha_ingreso))/86400000);
+    return'<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">'+avH(u.avatar,32)+'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+u.name+'</div><div style="font-size:11px;color:#888">'+u.dept+' · '+u.planta+'</div></div><span style="background:#E6F1FB;color:#185FA5;font-size:11px;padding:2px 8px;border-radius:20px">día '+dias+'</span></div>';
+  }).join('');
+}
+
+function switchFoo(tipo){
+  document.getElementById('fooTodos').style.background=tipo==='todos'?'#185FA5':'#f1efe8';
+  document.getElementById('fooTodos').style.color=tipo==='todos'?'#fff':'#666';
+  document.getElementById('fooEquipo').style.background=tipo==='equipo'?'#185FA5':'#f1efe8';
+  document.getElementById('fooEquipo').style.color=tipo==='equipo'?'#fff':'#666';
+  renderFooList(tipo);
+}
+
+function renderFooList(tipo){
+  var today=new Date().toISOString().split('T')[0];
+  var ausentes=AR.filter(function(r){return r.status==='approved'&&r.from_date<=today&&r.to_date>=today;});
+  if(tipo==='equipo'){
+    var team=AU.filter(function(u){return u.boss===CU.id||u.id===CU.id;}).map(function(u){return u.id;});
+    ausentes=ausentes.filter(function(r){return team.indexOf(r.user_id)>=0;});
+  }
+  if(ausentes.length===0){document.getElementById('fooList').innerHTML='<p style="color:#888;font-size:13px">Todos en oficina hoy. ✅</p>';return;}
+  document.getElementById('fooList').innerHTML=ausentes.map(function(r){
+    var emp=AU.find(function(u){return u.id===r.user_id;});
+    return'<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">'+avH(emp?emp.avatar:'?',32)+'<div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'?')+'</div><div style="font-size:11px;color:#888">Regresa: '+r.to_date+'</div></div></div>';
+  }).join('');
+}
+
+function renderFestivos(){
+  var hoy=new Date().toISOString().split('T')[0];
+  var proximos=DF.filter(function(f){return f.fecha>=hoy;}).slice(0,5);
+  if(proximos.length===0){document.getElementById('festivosList').innerHTML='<p style="color:#888;font-size:13px">Sin días festivos próximos.</p>';return;}
+  document.getElementById('festivosList').innerHTML=proximos.map(function(f){
+    var esHoy=f.fecha===hoy;
+    return'<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)"><div><div style="font-size:13px;font-weight:500">🎉 '+f.nombre+'</div><div style="font-size:11px;color:#888">'+fd(f.fecha)+'</div></div>'+(esHoy?'<span style="background:#EAF3DE;color:#3B6D11;font-size:11px;padding:2px 8px;border-radius:20px">Hoy</span>':'')+'</div>';
+  }).join('');
+}
+
+function renderAnuncios(){
+  if(!AN||AN.length===0){
+    document.getElementById('anunciosList').innerHTML='';
+    document.getElementById('anunciosEmpty').style.display='block';
+    return;
+  }
+  document.getElementById('anunciosEmpty').style.display='none';
+  var activos=AN.filter(function(a){return a.activo;}).slice(0,5);
+  document.getElementById('anunciosList').innerHTML=activos.map(function(a){
+    var tipoBg={'general':'#E6F1FB','urgente':'#FCEBEB','evento':'#EAF3DE'};
+    var tipoC={'general':'#185FA5','urgente':'#A32D2D','evento':'#3B6D11'};
+    var bg=tipoBg[a.tipo]||'#E6F1FB';var c=tipoC[a.tipo]||'#185FA5';
+    return'<div style="border-bottom:1px solid rgba(0,0,0,0.07);padding:10px 0">'+(a.imagen_url?'<img src="'+a.imagen_url+'" style="width:100%;border-radius:8px;margin-bottom:6px;max-height:120px;object-fit:cover" onerror="this.style.display=\'none\'"/>':'')+'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div style="font-size:13px;font-weight:600;margin-bottom:2px">'+a.titulo+'</div><div style="font-size:12px;color:#888">'+a.contenido+'</div><div style="font-size:11px;color:#aaa;margin-top:4px">'+a.created_at+'</div></div><span style="background:'+bg+';color:'+c+';font-size:10px;padding:2px 7px;border-radius:20px;white-space:nowrap">'+a.tipo+'</span></div></div>';
+  }).join('');
+}
+
+async function publicarAnuncio(){
+  var titulo=document.getElementById('an_titulo').value.trim();
+  var contenido=document.getElementById('an_contenido').value.trim();
+  var imagen=document.getElementById('an_imagen').value.trim();
+  var tipo=document.getElementById('an_tipo').value;
+  var msg=document.getElementById('anuncioMsg');
+  if(!titulo){msg.style.color='#A32D2D';msg.textContent='El título es obligatorio.';msg.style.display='block';return;}
+  try{
+    await sPost('anuncios',{titulo:titulo,contenido:contenido,imagen_url:imagen,tipo:tipo,created_by:CU.id,created_at:new Date().toISOString().split('T')[0],activo:true});
+    msg.style.color='#3B6D11';msg.textContent='Anuncio publicado.';msg.style.display='block';
+    document.getElementById('an_titulo').value='';document.getElementById('an_contenido').value='';document.getElementById('an_imagen').value='';
+    AN=await sGet('anuncios','select=*&order=id.desc&activo=eq.true');
+    renderAnuncios();
+  }catch(e){msg.style.color='#A32D2D';msg.textContent='Error al publicar.';msg.style.display='block';}
 }
 
 // RRHH
