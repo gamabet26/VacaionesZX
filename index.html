@@ -456,7 +456,7 @@ function calcVac(){
   var dp=document.getElementById('vacPreview');
   if(f&&t){
     var d=diffDaysExcl(f,t,d1,d2);if(half)d=Math.max(0.5,d-0.5);
-    var anios=calcAnios(CU.fecha_ingreso);var diasC=getDiasVac(anios);var avail=diasC-CU.used;
+    var anios=calcAnios(CU.fecha_ingreso);var diasC=getDiasVac(anios);var avail=diasC-parseFloat(CU.used||0);
     var fests=DF.filter(function(x){return x.fecha>=f&&x.fecha<=t;});
     var extras=[];if(d1!==''||d2!=='')extras.push('excluye descanso(s)');if(fests.length>0)extras.push('excluye '+fests.length+' festivo(s)');
     dp.style.display='block';dp.innerHTML='Días a descontar: <strong>'+d+'</strong>'+(extras.length?' <span style="font-size:11px">('+extras.join(' · ')+')</span>':'')+' · Disponibles: <strong style="color:'+(avail<0?'#A32D2D':'inherit')+'">'+avail+'</strong>';
@@ -475,7 +475,7 @@ async function submitVac(){
   if(half)d=Math.max(0.5,d-0.5);
   var anios=calcAnios(CU.fecha_ingreso);
   var diasC=getDiasVac(anios);
-  var avail=diasC-CU.used;
+  var avail=diasC-parseFloat(CU.used||0);
   if(avail<0){msg.style.color='#A32D2D';msg.textContent='Tu saldo está en negativo ('+avail+' días). Consulta a RRHH.';msg.style.display='block';return;}
   if(d>avail){msg.style.color='#A32D2D';msg.textContent='Solo tienes '+avail+' días disponibles.';msg.style.display='block';return;}
   btn.textContent='Enviando...';btn.disabled=true;
@@ -609,8 +609,8 @@ async function handleAction(action){
     await sPatch(tbl,'id=eq.'+aModal.id,{status:action,comment:comment});
     var emp=AU.find(function(u){return u.id===aModal.user_id;});
     if(action==='approved'){
-      if(emp&&aModalType==='vac')await sPatch('users','id=eq.'+emp.id,{used:emp.used+aModal.days});
-      if(emp&&aModalType==='banco')await sPatch('users','id=eq.'+emp.id,{horas_usadas:(emp.horas_usadas||0)+aModal.horas});
+      if(emp&&aModalType==='vac')await sPatch('users','id=eq.'+emp.id,{used:parseFloat(emp.used)+parseFloat(aModal.days)});
+      if(emp&&aModalType==='banco')await sPatch('users','id=eq.'+emp.id,{horas_usadas:parseFloat(emp.horas_usadas||0)+parseFloat(aModal.horas)});
     }
     if(emp&&emp.email){
       var tipo=aModalType==='vac'?'Vacaciones':aModalType==='banco'?'Banco de Horas':'Permiso';
@@ -626,8 +626,8 @@ async function handleAction(action){
 function renderDash(){
   var anios=calcAnios(CU.fecha_ingreso);
   var diasC=getDiasVac(anios);
-  var avail=diasC-CU.used;
-  var hAvail=(CU.horas_banco||12)-(CU.horas_usadas||0);
+  var avail=diasC-parseFloat(CU.used||0);
+  var hAvail=parseFloat(CU.horas_banco||12)-parseFloat(CU.horas_usadas||0);
   document.getElementById('welcomeMsg').textContent='Bienvenido, '+CU.name.split(' ')[0];
   var stats=[
     {l:'Días disponibles',v:avail,bg:avail<0?'#FCEBEB':'#EAF3DE',c:avail<0?'#A32D2D':'#3B6D11'},
