@@ -335,10 +335,24 @@ function togglePass(){
   else{i.type='password';b.textContent='👁';}
 }
 
-// Cargar usuario recordado
-window.addEventListener('load',function(){
+// Cargar usuario recordado y restaurar sesión
+window.addEventListener('load', async function(){
   var s=localStorage.getItem('zx-user');
   if(s){document.getElementById('loginUser').value=s;document.getElementById('rememberMe').checked=true;}
+  // Restaurar sesión activa
+  var session=localStorage.getItem('zx-session');
+  if(session){
+    try{
+      var sess=JSON.parse(session);
+      var data=await sGet('users','user_name=eq.'+encodeURIComponent(sess.user_name)+'&select=*');
+      if(data&&data.length>0&&data[0].pass===sess.pass){
+        CU=data[0];
+        document.getElementById('loginScreen').style.display='none';
+        document.getElementById('appScreen').style.display='block';
+        await loadAll();initApp();
+      }else{localStorage.removeItem('zx-session');}
+    }catch(e){localStorage.removeItem('zx-session');}
+  }
 });
 
 async function doLogin(){
@@ -352,6 +366,8 @@ async function doLogin(){
       CU=data[0];err.style.display='none';
       if(document.getElementById('rememberMe').checked)localStorage.setItem('zx-user',u);
       else localStorage.removeItem('zx-user');
+      // Guardar sesión activa
+      localStorage.setItem('zx-session',JSON.stringify({user_name:u,pass:p}));
       document.getElementById('loginScreen').style.display='none';
       document.getElementById('appScreen').style.display='block';
       await loadAll();initApp();
@@ -362,6 +378,7 @@ async function doLogin(){
 
 function doLogout(){
   CU=null;AU=[];AR=[];BH=[];PM=[];DF=[];
+  localStorage.removeItem('zx-session');
   document.getElementById('appScreen').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('loginUser').value='';
