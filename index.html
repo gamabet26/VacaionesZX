@@ -1257,30 +1257,39 @@ document.addEventListener('DOMContentLoaded',function(){
   var installBtn=document.getElementById('pwaInstallBtn');
   var closeBtn=document.getElementById('pwaCloseBtn');
   var bar=document.getElementById('pwaInstallBar');
+  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isAndroid=/android/i.test(navigator.userAgent);
+  var isInStandalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+
+  // No mostrar si ya está instalada
+  if(isInStandalone){return;}
+
   if(installBtn){
     installBtn.addEventListener('click',function(){
       if(pwaPrompt){
+        // Android Chrome con prompt automático disponible
         pwaPrompt.prompt();
         pwaPrompt.userChoice.then(function(r){
           if(r.outcome==='accepted'&&bar)bar.style.display='none';
           pwaPrompt=null;
         });
+      } else if(isIOS){
+        alert('En Safari:\n1. Toca el ícono compartir (cuadrado con flecha hacia arriba)\n2. Desliza y toca Agregar a pantalla de inicio\n3. Toca Agregar');
+      } else {
+        alert('En Chrome:\n1. Toca el menú (tres puntos arriba a la derecha)\n2. Toca Agregar a pantalla de inicio\n3. Toca Agregar');
       }
     });
   }
   if(closeBtn&&bar){
-    closeBtn.addEventListener('click',function(){bar.style.display='none';});
+    closeBtn.addEventListener('click',function(){bar.style.display='none';sessionStorage.setItem('pwaBarClosed','1');});
   }
-  // iOS Safari: show manual install tip
-  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-  var isInStandalone=window.navigator.standalone===true;
-  if(isIOS&&!isInStandalone&&bar){
+
+  // Mostrar barra si es móvil y no fue cerrada antes
+  var wasClosed=sessionStorage.getItem('pwaBarClosed');
+  if(!wasClosed&&(isIOS||isAndroid)&&bar){
     bar.style.display='flex';
     if(installBtn){
-      installBtn.textContent='Cómo instalar';
-      installBtn.addEventListener('click',function(){
-        alert('En Safari: toca el botón compartir (cuadro con flecha) y luego Agregar a pantalla de inicio');
-      });
+      if(isIOS) installBtn.textContent='Cómo instalar';
     }
   }
 });
