@@ -445,7 +445,10 @@ function diffDaysExcl(from,to,d1,d2){
 }
 function bH(s){return'<span class="b'+(s==='pending'?'p':s==='approved'?'a':'r')+'">'+(s==='pending'?'Pendiente':s==='approved'?'Aprobada':'Rechazada')+'</span>';}
 function avH(i,sz){sz=sz||36;return'<div class="av" style="width:'+sz+'px;height:'+sz+'px;font-size:'+(sz*0.33)+'px">'+i+'</div>';}
-function fd(d){if(!d)return'';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function fmtDias(n){
+  n=parseFloat(n||0);
+  return n%1===0?n.toString():n.toFixed(1);
+}
 function closeModal(id){document.getElementById(id).style.display='none';}
 
 // VACACIONES
@@ -630,9 +633,9 @@ function renderDash(){
   var hAvail=parseFloat(CU.horas_banco||12)-parseFloat(CU.horas_usadas||0);
   document.getElementById('welcomeMsg').textContent='Bienvenido, '+CU.name.split(' ')[0];
   var stats=[
-    {l:'Días disponibles',v:avail,bg:avail<0?'#FCEBEB':'#EAF3DE',c:avail<0?'#A32D2D':'#3B6D11'},
-    {l:'Días usados',v:CU.used,bg:'#FAEEDA',c:'#854F0B'},
-    {l:'Días correspondientes',v:diasC,bg:'#E6F1FB',c:'#185FA5'},
+    {l:'Días disponibles',v:fmtDias(avail),bg:avail<0?'#FCEBEB':'#EAF3DE',c:avail<0?'#A32D2D':'#3B6D11'},
+    {l:'Días usados',v:fmtDias(CU.used),bg:'#FAEEDA',c:'#854F0B'},
+    {l:'Días correspondientes',v:fmtDias(diasC),bg:'#E6F1FB',c:'#185FA5'},
     {l:'Antigüedad',v:anios+' año'+(anios!==1?'s':''),bg:'#f1efe8',c:'#444'}
   ];
   document.getElementById('statsGrid').innerHTML=stats.map(function(s){return'<div style="background:'+s.bg+';border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:'+s.c+';opacity:0.8;margin-bottom:4px">'+s.l+'</div><div style="font-size:22px;font-weight:500;color:'+s.c+'">'+s.v+'</div></div>';}).join('');
