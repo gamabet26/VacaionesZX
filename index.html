@@ -536,8 +536,8 @@ function renderDash(){
   var stats=[
     {l:'Dias disponibles',v:fmtDias(avail),bg:avail<0?'#FCEBEB':'#EAF3DE',c:avail<0?'#A32D2D':'#3B6D11'},
     {l:'Días usados',v:fmtDias(CU.used),bg:'#FAEEDA',c:'#854F0B'},
-    {l:'Dias correspondientes',v:fmtDias(diasC),bg:'#E6F1FB',c:'#185FA5'},
-    {l:'Antiguedad',v:anios+' ano'+(anios!==1?'s':''),bg:'#f1efe8',c:'#444'}
+    {l:'Días correspondientes',v:fmtDias(diasC),bg:'#E6F1FB',c:'#185FA5'},
+    {l:'Antigüedad',v:anios+' año'+(anios!==1?'s':''),bg:'#f1efe8',c:'#444'}
   ];
   document.getElementById('statsGrid').innerHTML=stats.map(function(s){return'<div style="background:'+s.bg+';border-radius:10px;padding:14px 16px"><div style="font-size:12px;color:'+s.c+';opacity:0.8;margin-bottom:4px">'+s.l+'</div><div style="font-size:22px;font-weight:500;color:'+s.c+'">'+s.v+'</div></div>';}).join('');
   document.getElementById('adminAnuncioBox').style.display=CU.role==='admin'?'block':'none';
@@ -562,7 +562,7 @@ function renderAnniversaries(){
   var anis=AU.filter(function(u){if(!u.fecha_ingreso)return false;var p=u.fecha_ingreso.split('-');return parseInt(p[1])===mes;}).sort(function(a,b){return parseInt(a.fecha_ingreso.split('-')[2])-parseInt(b.fecha_ingreso.split('-')[2]);});
   document.getElementById('anniversaryList').innerHTML=anis.length===0?'<p style="color:#888;font-size:13px">Sin aniversarios este mes.</p>':anis.map(function(u){
     var a=calcAnios(u.fecha_ingreso);var dia=parseInt(u.fecha_ingreso.split('-')[2]);var esHoy=dia===diaHoy;
-    return'<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">'+avH(u.avatar,32)+'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+u.name+'</div><div style="font-size:11px;color:#888">'+a+' ano'+(a!==1?'s':'')+' · '+u.dept+'</div></div>'+(esHoy?'<span style="background:#EAF3DE;color:#3B6D11;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500">HOY</span>':'<span style="font-size:12px;color:#888">dia '+dia+'</span>')+'</div>';
+    return'<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05)">'+avH(u.avatar,32)+'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+u.name+'</div><div style="font-size:11px;color:#888">'+a+' año'+(a!==1?'s':'')+' · '+u.dept+'</div></div>'+(esHoy?'<span style="background:#EAF3DE;color:#3B6D11;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500">HOY</span>':'<span style="font-size:12px;color:#888">dia '+dia+'</span>')+'</div>';
   }).join('');
 }
 
@@ -957,7 +957,7 @@ function renderAdminUsers(){
   var bossList=AU.filter(function(u){return u.role==='boss';});
   document.getElementById('adminUsers').innerHTML=AU.map(function(u){
     var a=calcAnios(u.fecha_ingreso);var dc=getDiasVac(a);var saldo=dc-parseFloat(u.used||0);
-    return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center">'+avH(u.avatar,34)+'<div><div style="font-size:14px;font-weight:500">'+u.name+'</div><div style="font-size:12px;color:#888">'+u.user_name+' &middot; '+u.dept+' &middot; '+(u.planta||'Zubex Planta')+'</div><div style="font-size:12px;color:#888">'+(u.fecha_ingreso?a+' ano'+(a!==1?'s':'')+' &middot; ':'')+( u.fecha_nacimiento?'Cumple: '+u.fecha_nacimiento:'')+'</div></div></div><div style="display:flex;align-items:center;gap:6px"><div style="text-align:right;margin-right:4px"><span style="font-size:12px;background:#E6F1FB;color:#185FA5;border-radius:20px;padding:2px 8px">'+u.role+'</span><div style="font-size:12px;color:'+(saldo<0?'#A32D2D':'#888')+';margin-top:2px;font-weight:'+(saldo<0?700:400)+'">'+fmtDias(saldo)+'d &middot; '+((u.horas_banco||12)-(u.horas_usadas||0))+'h</div></div><button type="button" class="btn-e" data-uid="'+u.id+'">Editar</button><button type="button" class="btn-de" data-del="'+u.id+'">Eliminar</button></div></div></div>';
+    return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center">'+avH(u.avatar,34)+'<div><div style="font-size:14px;font-weight:500">'+u.name+'</div><div style="font-size:12px;color:#888">'+u.user_name+' &middot; '+u.dept+' &middot; '+(u.planta||'Zubex Planta')+'</div><div style="font-size:12px;color:#888">'+(u.fecha_ingreso?a+' año'+(a!==1?'s':'')+' &middot; ':'')+( u.fecha_nacimiento?'Cumple: '+u.fecha_nacimiento:'')+'</div></div></div><div style="display:flex;align-items:center;gap:6px"><div style="text-align:right;margin-right:4px"><span style="font-size:12px;background:#E6F1FB;color:#185FA5;border-radius:20px;padding:2px 8px">'+u.role+'</span><div style="font-size:12px;color:'+(saldo<0?'#A32D2D':'#888')+';margin-top:2px;font-weight:'+(saldo<0?700:400)+'">'+fmtDias(saldo)+'d &middot; '+((u.horas_banco||12)-(u.horas_usadas||0))+'h</div></div><button type="button" class="btn-e" data-uid="'+u.id+'">Editar</button><button type="button" class="btn-de" data-del="'+u.id+'">Eliminar</button></div></div></div>';
   }).join('')+
   '<div class="card" style="margin-top:1.5rem"><h3 style="margin:0 0 12px;font-size:15px;font-weight:500">Agregar empleado</h3>'+
   '<div class="fr"><div><label>Nombre completo</label><input id="nu_name" placeholder="Juan Perez"/></div><div><label>Usuario</label><input id="nu_user" placeholder="juan.perez" autocapitalize="none"/></div></div>'+
@@ -980,7 +980,7 @@ function renderAdminUsers(){
 function previewVacNuevo(){
   var ingreso=document.getElementById('nu_ingreso').value;
   var prev=document.getElementById('nu_vac_preview');
-  if(ingreso){var a=calcAnios(ingreso);var d=getDiasVac(a);prev.style.display='block';prev.innerHTML='Antiguedad: <strong>'+a+' ano'+(a!==1?'s':'')+'</strong> &middot; Dias que corresponden: <strong>'+d+'</strong>';}
+  if(ingreso){var a=calcAnios(ingreso);var d=getDiasVac(a);prev.style.display='block';prev.innerHTML='Antigüedad: <strong>'+a+' año'+(a!==1?'s':'')+'</strong> &middot; Días que corresponden: <strong>'+d+'</strong>';}
   else prev.style.display='none';
 }
 
@@ -1032,7 +1032,7 @@ function openEditModal(uid){
   var bossSel=document.getElementById('edit_boss');
   bossSel.innerHTML='<option value="">Sin jefe</option>'+AU.filter(function(x){return x.role==='boss'&&x.id!==uid;}).map(function(b){return'<option value="'+b.id+'"'+(u.boss===b.id?' selected':'')+'>'+b.name+'</option>';}).join('');
   var prev=document.getElementById('edit_vac_preview');
-  if(u.fecha_ingreso){var a=calcAnios(u.fecha_ingreso);var d=getDiasVac(a);prev.style.display='block';prev.innerHTML='Antiguedad: <strong>'+a+' ano'+(a!==1?'s':'')+'</strong> &middot; Dias: <strong>'+d+'</strong>';}
+  if(u.fecha_ingreso){var a=calcAnios(u.fecha_ingreso);var d=getDiasVac(a);prev.style.display='block';prev.innerHTML='Antigüedad: <strong>'+a+' año'+(a!==1?'s':'')+'</strong> &middot; Días: <strong>'+d+'</strong>';}
   else prev.style.display='none';
   document.getElementById('editMsg').style.display='none';
   document.getElementById('editModal').style.display='flex';
