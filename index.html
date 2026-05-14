@@ -320,7 +320,20 @@ body.dark label{color:#aaa}
       <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:10px">📋 Historial permisos</div><div style="overflow-x:auto"><table><thead><tr><th>Empleado</th><th>Planta</th><th>Tipo</th><th>Goce</th><th>Desde</th><th>Hasta</th><th>Estatus</th></tr></thead><tbody id="permisosTableBody"></tbody></table></div></div>
       <div class="card"><div style="font-size:14px;font-weight:500;margin-bottom:10px">⏰ Banco de horas</div><div style="overflow-x:auto"><table><thead><tr><th>Empleado</th><th>Planta</th><th>Fecha</th><th>Horas</th><th>Estatus</th></tr></thead><tbody id="bancoTableBody"></tbody></table></div></div>
     </div>
-    <div id="vAdminPanel" class="screen">
+    <!-- VIGILANCIA -->
+    <div id="vVigilancia" class="screen">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-size:32px;margin-bottom:6px">🔒</div>
+        <h2 style="font-size:18px;font-weight:600;margin:0">Permisos Autorizados</h2>
+        <p style="font-size:13px;color:#888;margin-top:4px" id="vigilanciaFecha"></p>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap">
+        <button type="button" id="vigHoy" onclick="switchVig('hoy')" style="border:none;border-radius:20px;padding:6px 16px;cursor:pointer;background:#185FA5;color:#fff;font-size:13px">Hoy</button>
+        <button type="button" id="vigSemana" onclick="switchVig('semana')" style="border:none;border-radius:20px;padding:6px 16px;cursor:pointer;background:#f1efe8;color:#666;font-size:13px">Esta semana</button>
+        <button type="button" onclick="loadAll().then(function(){renderVigilancia('hoy');})" style="border:none;border-radius:20px;padding:6px 16px;cursor:pointer;background:#EAF3DE;color:#3B6D11;font-size:13px">🔄 Actualizar</button>
+      </div>
+      <div id="vigList"></div>
+    </div>
       <h2 style="margin:0 0 1rem;font-size:17px;font-weight:500">Panel de administración</h2>
       <div style="display:flex;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:1rem">
         <button type="button" class="nb active" id="tabUsersBtn" onclick="switchAdminTab('users')">Empleados</button>
@@ -353,8 +366,7 @@ body.dark label{color:#aaa}
   <div class="fr"><div><label>Nombre completo</label><input id="edit_name"/></div><div><label>Usuario</label><input id="edit_user" autocapitalize="none"/></div></div>
   <div class="fr" style="margin-top:4px"><div><label>Nueva contraseña</label><input id="edit_pass" type="password" placeholder="Vacío = sin cambio"/></div><div><label>Departamento</label><input id="edit_dept"/></div></div>
   <div style="margin-top:4px"><label>Correo electrónico</label><input id="edit_email" type="email"/></div>
-  <div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="edit_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="edit_role"><option value="employee">Empleado</option><option value="boss">Jefe</option><option value="admin">Admin</option></select></div></div>
-  <div class="fr" style="margin-top:4px"><div><label>Jefe directo</label><select id="edit_boss"></select></div><div><label>Descanso 1</label><select id="edit_desc1"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div></div>
+  <div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="edit_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="edit_role">        <option value="employee">Empleado</option><option value="boss">Jefe</option><option value="admin">Admin</option><option value="vigilancia">Vigilancia</option><div><label>Descanso 1</label><select id="edit_desc1"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div></div>
   <div class="fr" style="margin-top:4px"><div><label>Descanso 2</label><select id="edit_desc2"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div><label>Días usados</label><input id="edit_used" type="number"/></div></div>
   <div class="fr" style="margin-top:4px"><div><label>Horas banco</label><input id="edit_horas" type="number" step="0.5"/></div><div><label>Horas usadas</label><input id="edit_horasU" type="number" step="0.5"/></div></div>
   <div class="fr" style="margin-top:4px"><div><label>Fecha de ingreso</label><input id="edit_ingreso" type="date" onchange="previewVacEdit()"/></div><div><label>Fecha de nacimiento</label><input id="edit_nacimiento" type="date"/></div></div>
@@ -478,17 +490,25 @@ async function loadAll(){
 function initApp(){
   document.getElementById('headerAvatar').textContent=CU.avatar;
   document.getElementById('headerName').textContent=CU.name;
-  buildNav();showView('dashboard');updateNotifs();
+  buildNav();
+  if(CU.role==='vigilancia')showView('vigilancia');
+  else showView('dashboard');
+  updateNotifs();
 }
 
 function buildNav(){
   var nav=document.getElementById('navBar');nav.innerHTML='';
-  var items=[['dashboard','Inicio']];
-  if(CU.role!=='admin'){items.push(['vacaciones','Vacaciones']);items.push(['bancoHoras','Banco de Horas']);items.push(['permisos','Permisos']);items.push(['misSolicitudes','Mis Solicitudes']);}
-  var pc=getPending('vac').length+getPending('banco').length+getPending('permiso').length;
-  if(CU.role==='boss'||CU.role==='admin')items.push(['pendientes','Pendientes'+(pc>0?' ('+pc+')':'')]);
-  if(CU.role==='boss'||CU.role==='admin')items.push(['rrhhDashboard','📊 RRHH']);
-  if(CU.role==='admin')items.push(['adminPanel','Administración']);
+  var items=[];
+  if(CU.role==='vigilancia'){
+    items=[['vigilancia','🔒 Permisos del día']];
+  }else{
+    items=[['dashboard','Inicio']];
+    if(CU.role!=='admin'){items.push(['vacaciones','Vacaciones']);items.push(['bancoHoras','Banco de Horas']);items.push(['permisos','Permisos']);items.push(['misSolicitudes','Mis Solicitudes']);}
+    var pc=getPending('vac').length+getPending('banco').length+getPending('permiso').length;
+    if(CU.role==='boss'||CU.role==='admin')items.push(['pendientes','Pendientes'+(pc>0?' ('+pc+')':'')]);
+    if(CU.role==='boss'||CU.role==='admin')items.push(['rrhhDashboard','📊 RRHH']);
+    if(CU.role==='admin')items.push(['adminPanel','Administración']);
+  }
   items.forEach(function(it){var b=document.createElement('button');b.type='button';b.className='nb';b.textContent=it[1];b.dataset.view=it[0];b.onclick=function(){showView(it[0]);};nav.appendChild(b);});
 }
 
@@ -497,6 +517,7 @@ function showView(v){
   document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('active');if(b.dataset.view===v)b.classList.add('active');});
   var el=document.getElementById('v'+v.charAt(0).toUpperCase()+v.slice(1));if(el)el.classList.add('active');
   if(v==='dashboard')renderDash();
+  else if(v==='vigilancia'){renderVigilancia('todas');switchVig('todas');}
   else if(v==='misSolicitudes')renderMisSolicitudes();
   else if(v==='bancoHoras')renderBancoSaldo();
   else if(v==='pendientes')switchPtTab('vac');
@@ -634,9 +655,11 @@ async function submitPermiso(){
   if(tipo!=='Fallecimiento'){var dd=(new Date(desde)-new Date())/86400000;if(dd<7){msg.style.color='#A32D2D';msg.textContent='Solicita con al menos 1 semana de anticipación.';msg.style.display='block';return;}}
   var reqDoc=(tipo==='Matrimonio'||tipo==='Fallecimiento'||tipo==='Otro motivo');
   var tipoFull=tipo+(parentesco?' - '+parentesco:'');
+  var horarioEntrada=document.getElementById('pHorarioEntrada').value;
+  var horarioSalida=document.getElementById('pHorarioSalida').value;
   btn.textContent='Enviando...';btn.disabled=true;
   try{
-    await sPost('permisos',{user_id:CU.id,tipo:tipoFull,tipo_goce:goce,fecha_desde:desde,fecha_hasta:hasta,motivo:'',requiere_doc:reqDoc,status:'pending',created_at:new Date().toISOString().split('T')[0],comment:''});
+    await sPost('permisos',{user_id:CU.id,tipo:tipoFull,tipo_goce:goce,fecha_desde:desde,fecha_hasta:hasta,motivo:'',requiere_doc:reqDoc,status:'pending',created_at:new Date().toISOString().split('T')[0],comment:'',horario_entrada:horarioEntrada,horario_salida:horarioSalida});
     await notifyBoss('Permiso: '+tipoFull,desde+' al '+hasta);
     msg.style.color='#3B6D11';msg.textContent='Solicitud enviada.'+(reqDoc?' Recuerda entregar el documento soporte.':'');msg.style.display='block';
     document.getElementById('pTipo').value='';document.getElementById('pDesde').value='';document.getElementById('pHasta').value='';
@@ -803,7 +826,71 @@ function renderNewEmployees(){
   }).join('');
 }
 
-function switchFoo(tipo){
+function switchVig(tipo){
+  ['hoy','semana'].forEach(function(t){
+    var btn=document.getElementById('vig'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(btn){btn.style.background=t===tipo?'#185FA5':'#f1efe8';btn.style.color=t===tipo?'#fff':'#666';}
+  });
+  renderVigilancia(tipo);
+}
+
+function renderVigilancia(tipo){
+  var today=new Date().toISOString().split('T')[0];
+  var mon=getWeekStart(new Date()),sun=new Date(mon);sun.setDate(sun.getDate()+6);
+  var monS=mon.toISOString().split('T')[0],sunS=sun.toISOString().split('T')[0];
+  document.getElementById('vigilanciaFecha').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  var permisos=PM.filter(function(p){
+    if(p.status!=='approved')return false;
+    if(tipo==='hoy')return p.fecha_desde<=today&&p.fecha_hasta>=today;
+    return p.fecha_desde<=sunS&&p.fecha_hasta>=monS;
+  });
+
+  // Ordenar: hoy primero, luego por fecha
+  permisos.sort(function(a,b){
+    var aHoy=a.fecha_desde<=today&&a.fecha_hasta>=today?0:1;
+    var bHoy=b.fecha_desde<=today&&b.fecha_hasta>=today?0:1;
+    if(aHoy!==bHoy)return aHoy-bHoy;
+    return a.fecha_desde.localeCompare(b.fecha_desde);
+  });
+
+  var el=document.getElementById('vigList');
+  if(permisos.length===0){
+    el.innerHTML='<div style="text-align:center;padding:3rem;color:#888"><div style="font-size:48px;margin-bottom:12px">✅</div><div style="font-size:16px;font-weight:500">Sin permisos '+(tipo==='hoy'?'para hoy':'esta semana')+'</div></div>';
+    return;
+  }
+
+  el.innerHTML=permisos.map(function(p){
+    var emp=AU.find(function(u){return u.id===p.user_id;});
+    var jefe=emp?AU.find(function(u){return u.id===emp.boss;}):null;
+    var goceColor={'Con goce':'#EAF3DE','Sin goce':'#FCEBEB','Repone horas':'#FAEEDA'};
+    var goceC={'Con goce':'#3B6D11','Sin goce':'#A32D2D','Repone horas':'#854F0B'};
+    var bg=goceColor[p.tipo_goce]||'#E6F1FB';
+    var c=goceC[p.tipo_goce]||'#185FA5';
+    var esHoy=p.fecha_desde<=today&&p.fecha_hasta>=today;
+    return'<div class="card" style="margin-bottom:12px;border-left:4px solid '+c+'">'  +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">'+
+      '<div style="display:flex;gap:12px;align-items:center">'+avH(emp?emp.avatar:'?',44)+
+      '<div><div style="font-size:16px;font-weight:600">'+(emp?emp.name:'?')+'</div>'+
+      '<div style="font-size:13px;color:#888;margin-top:2px">'+(emp?emp.dept:'?')+' · '+(emp?emp.planta||'':'')+'</div>'+
+      '<div style="font-size:12px;color:#888;margin-top:2px">No. Empleado: '+(emp?emp.id:'?')+'</div></div></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
+      '<span style="background:'+bg+';color:'+c+';font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px">'+p.tipo_goce+'</span>'+
+      (esHoy?'<span style="background:#185FA5;color:#fff;font-size:11px;padding:2px 10px;border-radius:20px">HOY</span>':'')+'</div></div>'+
+      '<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+      '<div style="background:#f5f5f3;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#888;margin-bottom:2px">Tipo de permiso</div><div style="font-size:13px;font-weight:500">'+p.tipo+'</div></div>'+
+      '<div style="background:#f5f5f3;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#888;margin-bottom:2px">Vigencia</div><div style="font-size:13px;font-weight:500">'+fd(p.fecha_desde)+' al '+fd(p.fecha_hasta)+'</div></div>'+
+      (p.horario_entrada||p.horario_salida?
+        '<div style="background:#E6F1FB;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#185FA5;margin-bottom:2px">&#128336; Hora entrada pactada</div><div style="font-size:14px;font-weight:600;color:#185FA5">'+(p.horario_entrada||'No especificada')+'</div></div>'+
+        '<div style="background:#E6F1FB;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#185FA5;margin-bottom:2px">&#128336; Hora salida pactada</div><div style="font-size:14px;font-weight:600;color:#185FA5">'+(p.horario_salida||'No especificada')+'</div></div>':'')+
+      '<div style="background:#f5f5f3;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#888;margin-bottom:2px">Autorizado por</div><div style="font-size:13px;font-weight:500">'+(jefe?jefe.name:'Jefe directo')+'</div></div>'+
+      '<div style="background:#EAF3DE;border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:#3B6D11;margin-bottom:2px">Estatus</div><div style="font-size:13px;font-weight:600;color:#3B6D11">✅ AUTORIZADO</div></div>'+
+      '</div>'+(p.comment?'<div style="margin-top:8px;background:#f5f5f3;border-radius:8px;padding:8px 12px;font-size:12px;color:#666">💬 '+p.comment+'</div>':'')+'</div>';
+  }).join('');
+}
+
+// Agregar vigilancia al showView
+
   document.getElementById('fooTodos').style.background=tipo==='todos'?'#185FA5':'#f1efe8';
   document.getElementById('fooTodos').style.color=tipo==='todos'?'#fff':'#666';
   document.getElementById('fooEquipo').style.background=tipo==='equipo'?'#185FA5':'#f1efe8';
@@ -991,7 +1078,7 @@ function renderAdminUsers(){
   '<div class="fr"><div><label>Nombre completo</label><input id="nu_name" placeholder="Juan Pérez"/></div><div><label>Usuario</label><input id="nu_user" placeholder="juan.perez" autocapitalize="none"/></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Contraseña</label><input id="nu_pass" type="password"/></div><div><label>Departamento</label><input id="nu_dept" placeholder="Ventas"/></div></div>'+
   '<div style="margin-top:4px"><label>Correo electrónico</label><input id="nu_email" type="email" placeholder="correo@zubex.com"/></div>'+
-  '<div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="nu_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="nu_role"><option value="employee">Empleado</option><option value="boss">Jefe</option><option value="admin">Admin</option></select></div></div>'+
+  '<div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="nu_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="nu_role"><option value="employee">Empleado</option><option value="boss">Jefe</option><option value="admin">Admin</option><option value="vigilancia">Vigilancia</option></select></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Jefe directo</label><select id="nu_boss"><option value="">Sin jefe</option>'+bossList.map(function(b){return'<option value="'+b.id+'">'+b.name+'</option>';}).join('')+'</select></div><div><label>Descanso 1</label><select id="nu_desc1"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Descanso 2</label><select id="nu_desc2"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div><label>Días usados</label><input id="nu_used" type="number" value="0"/></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Fecha de ingreso</label><input id="nu_ingreso" type="date" onchange="previewVacNuevo()"/></div><div><label>Fecha de nacimiento</label><input id="nu_nacimiento" type="date"/></div></div>'+
