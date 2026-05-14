@@ -744,7 +744,7 @@ function renderDash(){
   }
 
   // Admin: mostrar caja de anuncios
-  if(CU.role==='admin'){document.getElementById('adminAnuncioBox').style.display='block';}
+  document.getElementById('adminAnuncioBox').style.display=(CU.role==='admin')?'block':'none';
 
   // Pendientes para jefe/admin
   var pc=getPending('vac').length+getPending('banco').length+getPending('permiso').length;
