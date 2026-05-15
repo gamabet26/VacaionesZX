@@ -419,7 +419,7 @@ var SB='https://gdhbfibidlrghcustjfa.supabase.co';
 var SK='sb_publishable__jDwawpVxCiRDal8dFFk3A_3GL1mVUf';
 function sbH(){return{'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+SK};}
 async function sGet(t,p){var r=await fetch(SB+'/rest/v1/'+t+'?'+p,{headers:sbH()});return await r.json();}
-async function sPost(t,d){var r=await fetch(SB+'/rest/v1/'+t,{method:'POST',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(d)});return await r.json();}
+async function sPost(t,d){var r=await fetch(SB+'/rest/v1/'+t,{method:'POST',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(d)});var j=await r.json();if(!r.ok)throw new Error((j&&j.message)||('HTTP '+r.status));return j;}
 async function sPatch(t,f,d){var r=await fetch(SB+'/rest/v1/'+t+'?'+f,{method:'PATCH',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(d)});return await r.json();}
 async function sDel(t,f){await fetch(SB+'/rest/v1/'+t+'?'+f,{method:'DELETE',headers:sbH()});}
 
@@ -1170,7 +1170,7 @@ async function addUser(){
     await sPost('users',{name:name,user_name:uname,pass:pass,role:role,dept:dept,area:area,boss:boss?parseInt(boss):null,days:dc,used:used,avatar:initials,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,horas_banco:12,horas_usadas:0,email:email,fecha_ingreso:ingreso,fecha_nacimiento:nacimiento});
     msg.style.color='#3B6D11';msg.textContent='Usuario creado exitosamente.';msg.style.display='block';
     await loadAll();renderAdminUsers();buildNav();
-  }catch(e){msg.style.color='#A32D2D';msg.textContent='Error. El usuario puede ya existir.';msg.style.display='block';}
+  }catch(e){msg.style.color='#A32D2D';msg.textContent='Error: '+e.message;msg.style.display='block';}
 }
 
 async function publicarAnuncio(){
