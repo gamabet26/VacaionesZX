@@ -334,6 +334,7 @@ body.dark .lobby-grid .card{background:#2a2a2a}
           <div><label>Hasta</label><input type="date" id="fTo"/></div>
           <div><label>Planta</label><select id="fPlanta"><option value="">Todas</option><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div>
           <div><label>Departamento</label><select id="fDept"><option value="">Todos</option></select></div>
+          <div><label>Área</label><select id="fArea"><option value="">Todas</option></select></div>
           <div><label>Empleado</label><select id="fEmp"><option value="">Todos</option></select></div>
           <div><label>Estatus</label><select id="fStatus"><option value="">Todos</option><option value="approved">Aprobadas</option><option value="pending">Pendientes</option><option value="rejected">Rechazadas</option></select></div>
           <div style="display:flex;align-items:flex-end"><button type="button" id="clearFiltersBtn" class="btn-l" style="width:100%">Limpiar</button></div>
@@ -366,6 +367,7 @@ body.dark .lobby-grid .card{background:#2a2a2a}
         <button type="button" class="nb" id="tabFestBtn">Dias Festivos</button>
       </div>
       <div id="adminUsers"></div>
+      <div id="adminSeedDiv" style="display:none;margin-top:1rem"><button type="button" class="btn-p" onclick="seedInitialData()" style="background:#A32D2D;font-size:13px">&#9888; Cargar usuarios iniciales y limpiar solicitudes (solo una vez)</button></div>
       <div id="adminAllReqs" style="display:none"></div>
       <div id="adminFestivos" style="display:none"></div>
     </div>
@@ -389,9 +391,9 @@ body.dark .lobby-grid .card{background:#2a2a2a}
   <h3 style="margin:0 0 16px;font-size:16px;font-weight:500">Editar empleado</h3>
   <input type="hidden" id="edit_id"/>
   <div class="fr"><div><label>Nombre completo</label><input id="edit_name"/></div><div><label>Usuario</label><input id="edit_user" autocapitalize="none"/></div></div>
-  <div class="fr" style="margin-top:4px"><div><label>Nueva contrasena</label><input id="edit_pass" type="password" placeholder="Vacio = sin cambio"/></div><div><label>Departamento</label><input id="edit_dept"/></div></div>
+  <div class="fr" style="margin-top:4px"><div><label>Nueva contrasena</label><input id="edit_pass" type="password" placeholder="Vacio = sin cambio"/></div><div><label>Departamento</label><input id="edit_dept"/></div><div><label>Área</label><input id="edit_area" placeholder="Ej. Producción"/></div></div>
   <div style="margin-top:4px"><label>Correo electronico</label><input id="edit_email" type="email"/></div>
-  <div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="edit_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="edit_role"><option value="employee">Operador</option><option value="lider">Líder</option><option value="boss">Jefe</option><option value="gerente">Gerente</option><option value="subdirector">Subdirector</option><option value="admin">Admin</option><option value="vigilancia">Vigilancia</option></select></div></div>
+  <div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="edit_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="edit_role"><option value="employee">Operador</option><option value="coordinador">Coordinador</option><option value="lider">Líder</option><option value="boss">Jefe</option><option value="gerente">Gerente</option><option value="subdirector">Subdirector</option><option value="admin">Admin</option><option value="vigilancia">Vigilancia</option></select></div></div>
   <div class="fr" style="margin-top:4px"><div><label>Jefe directo</label><select id="edit_boss"></select></div><div><label>Descanso 1</label><select id="edit_desc1"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div></div>
   <div class="fr" style="margin-top:4px"><div><label>Descanso 2</label><select id="edit_desc2"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div><label>Días usados</label><input id="edit_used" type="number"/></div></div>
   <div class="fr" style="margin-top:4px"><div><label>Horas banco</label><input id="edit_horas" type="number" step="0.5"/></div><div><label>Horas usadas</label><input id="edit_horasU" type="number" step="0.5"/></div></div>
@@ -544,7 +546,7 @@ function showView(v){
 }
 
 function canApprove(role){
-  return role==='lider'||role==='boss'||role==='gerente'||role==='subdirector'||role==='admin';
+  return role==='coordinador'||role==='lider'||role==='boss'||role==='gerente'||role==='subdirector'||role==='admin';
 }
 function getMyTeam(){
   if(CU.role==='admin')return AU;
@@ -925,24 +927,27 @@ function populateFilters(){
   var depts=[...new Set(AU.map(function(u){return u.dept;}))].sort();
   document.getElementById('fDept').innerHTML='<option value="">Todos</option>'+depts.map(function(d){return'<option value="'+d+'">'+d+'</option>';}).join('');
   document.getElementById('fEmp').innerHTML='<option value="">Todos</option>'+AU.map(function(u){return'<option value="'+u.id+'">'+u.name+'</option>';}).join('');
+  var areas=[...new Set(AU.map(function(u){return u.area||'';}).filter(Boolean))].sort();
+  var fAEl=document.getElementById('fArea');if(fAEl)fAEl.innerHTML='<option value="">Todas</option>'+areas.map(function(a){return'<option value="'+a+'">'+a+'</option>';}).join('');
 }
 function applyFilters(){
   var fF=document.getElementById('fFrom').value,fT=document.getElementById('fTo').value;
   var fP=document.getElementById('fPlanta').value,fD=document.getElementById('fDept').value;
+  var fA=document.getElementById('fArea')?document.getElementById('fArea').value:'';
   var fE=document.getElementById('fEmp').value,fS=document.getElementById('fStatus').value;
   filtAR=AR.filter(function(r){
     var emp=AU.find(function(u){return u.id===r.user_id;});
     if(fF&&r.to_date<fF)return false;if(fT&&r.from_date>fT)return false;
-    if(fP&&emp&&(emp.planta||'')!==fP)return false;if(fD&&emp&&emp.dept!==fD)return false;
+    if(fP&&emp&&(emp.planta||'')!==fP)return false;if(fD&&emp&&emp.dept!==fD)return false;if(fA&&emp&&(emp.area||'')!==fA)return false;
     if(fE&&r.user_id!==parseInt(fE))return false;if(fS&&r.status!==fS)return false;
     return true;
   });
-  var visEmp=AU.filter(function(u){if(fP&&(u.planta||'')!==fP)return false;if(fD&&u.dept!==fD)return false;return true;});
+  var visEmp=AU.filter(function(u){if(fP&&(u.planta||'')!==fP)return false;if(fD&&u.dept!==fD)return false;if(fA&&(u.area||'')!==fA)return false;return true;});
   var fEmpEl=document.getElementById('fEmp'),curV=fEmpEl.value;
   fEmpEl.innerHTML='<option value="">Todos</option>'+visEmp.map(function(u){return'<option value="'+u.id+'"'+(curV==u.id?' selected':'')+'>'+u.name+'</option>';}).join('');
   renderKpis();renderPlantaStats();renderWeek();renderCal();renderDeptGrid();renderFullTable();
 }
-function clearFilters(){['fFrom','fTo','fDept','fEmp','fStatus'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('fPlanta').value='';applyFilters();}
+function clearFilters(){['fFrom','fTo','fDept','fEmp','fStatus'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('fPlanta').value='';var fAEl=document.getElementById('fArea');if(fAEl)fAEl.value='';applyFilters();}
 function renderKpis(){
   var today=new Date().toISOString().split('T')[0];
   var ausT=AR.filter(function(r){return r.status==='approved'&&r.from_date<=today&&r.to_date>=today;});
@@ -1024,12 +1029,13 @@ function renderAdmin(){
   if(t==='users')renderAdminUsers();else if(t==='allRequests')renderAdminReqs();else renderAdminFestivos();
 }
 function switchAdminTab(t){
+  var sDiv=document.getElementById('adminSeedDiv');if(sDiv)sDiv.style.display=(CU&&CU.role==='admin'&&t==='users')?'block':'none';
   document.getElementById('tabUsersBtn').classList.toggle('active',t==='users');document.getElementById('tabReqsBtn').classList.toggle('active',t==='allRequests');document.getElementById('tabFestBtn').classList.toggle('active',t==='festivos');
   document.getElementById('adminUsers').style.display=t==='users'?'block':'none';document.getElementById('adminAllReqs').style.display=t==='allRequests'?'block':'none';document.getElementById('adminFestivos').style.display=t==='festivos'?'block':'none';
   if(t==='users')renderAdminUsers();else if(t==='allRequests')renderAdminReqs();else renderAdminFestivos();
 }
 function renderAdminUsers(){
-  var bossList=AU.filter(function(u){return u.role==='lider'||u.role==='boss'||u.role==='gerente'||u.role==='subdirector'||u.role==='admin';});
+  var bossList=AU.filter(function(u){return u.role==='coordinador'||u.role==='lider'||u.role==='boss'||u.role==='gerente'||u.role==='subdirector'||u.role==='admin';});
   document.getElementById('adminUsers').innerHTML=AU.map(function(u){
     var a=calcAnios(u.fecha_ingreso);var dc=getDiasVac(a);var saldo=dc-parseFloat(u.used||0);
     return'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center">'+avH(u.avatar,34)+'<div><div style="font-size:14px;font-weight:500">'+u.name+'</div><div style="font-size:12px;color:#888">'+u.user_name+' &middot; '+u.dept+' &middot; '+(u.planta||'Zubex Planta')+'</div><div style="font-size:12px;color:#888">'+(u.fecha_ingreso?a+' año'+(a!==1?'s':'')+' &middot; ':'')+( u.fecha_nacimiento?'Cumple: '+u.fecha_nacimiento:'')+'</div></div></div><div style="display:flex;align-items:center;gap:6px"><div style="text-align:right;margin-right:4px"><span style="font-size:12px;background:#E6F1FB;color:#185FA5;border-radius:20px;padding:2px 8px">'+u.role+'</span><div style="font-size:12px;color:'+(saldo<0?'#A32D2D':'#888')+';margin-top:2px;font-weight:'+(saldo<0?700:400)+'">'+fmtDias(saldo)+'d &middot; '+((u.horas_banco||12)-(u.horas_usadas||0))+'h</div></div><button type="button" class="btn-e" data-uid="'+u.id+'">Editar</button><button type="button" class="btn-de" data-del="'+u.id+'">Eliminar</button></div></div></div>';
@@ -1037,8 +1043,9 @@ function renderAdminUsers(){
   '<div class="card" style="margin-top:1.5rem"><h3 style="margin:0 0 12px;font-size:15px;font-weight:500">Agregar empleado</h3>'+
   '<div class="fr"><div><label>Nombre completo</label><input id="nu_name" placeholder="Juan Perez"/></div><div><label>Usuario</label><input id="nu_user" placeholder="juan.perez" autocapitalize="none"/></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Contrasena</label><input id="nu_pass" type="password"/></div><div><label>Departamento</label><input id="nu_dept" placeholder="Ventas"/></div></div>'+
+  '<div class="fr" style="margin-top:4px"><div><label>Área</label><input id="nu_area" placeholder="Ej. Producción"/></div></div>'+
   '<div style="margin-top:4px"><label>Correo electronico</label><input id="nu_email" type="email" placeholder="correo@zubex.com"/></div>'+
-  '<div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="nu_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="nu_role"><option value="employee">Operador</option><option value="lider">Líder</option><option value="boss">Jefe</option><option value="gerente">Gerente</option><option value="subdirector">Subdirector</option><option value="admin">Admin</option><option value="vigilancia">Vigilancia</option></select></div></div>'+
+  '<div class="fr" style="margin-top:4px"><div><label>Planta</label><select id="nu_planta"><option value="Zubex Planta">Zubex Planta</option><option value="Zubex CEDIS">Zubex CEDIS</option></select></div><div><label>Rol</label><select id="nu_role"><option value="employee">Operador</option><option value="coordinador">Coordinador</option><option value="lider">Líder</option><option value="boss">Jefe</option><option value="gerente">Gerente</option><option value="subdirector">Subdirector</option><option value="admin">Admin</option><option value="vigilancia">Vigilancia</option></select></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Jefe directo</label><select id="nu_boss"><option value="">Sin jefe</option>'+bossList.map(function(b){return'<option value="'+b.id+'">'+b.name+'</option>';}).join('')+'</select></div><div><label>Descanso 1</label><select id="nu_desc1"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Descanso 2</label><select id="nu_desc2"><option value="">Ninguno</option><option value="0">Domingo</option><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option><option value="6">Sábado</option></select></div><div><label>Días usados</label><input id="nu_used" type="number" value="0"/></div></div>'+
   '<div class="fr" style="margin-top:4px"><div><label>Fecha de ingreso</label><input id="nu_ingreso" type="date"/></div><div><label>Fecha de nacimiento</label><input id="nu_nacimiento" type="date"/></div></div>'+
@@ -1059,11 +1066,16 @@ function previewVacNuevo(){
   else prev.style.display='none';
 }
 
+function deleteReq(type,id){
+  if(!confirm('Eliminar esta solicitud? Esta acción no se puede deshacer.'))return;
+  var tbl=type==='vac'?'requests':type==='banco'?'banco_horas':'permisos';
+  sDel(tbl,'id=eq.'+id).then(function(){loadAll().then(function(){renderAdminReqs();});});
+}
 function renderAdminReqs(){
   document.getElementById('adminAllReqs').innerHTML=
-    '<h4 style="margin-bottom:8px;font-size:14px">Vacaciones</h4>'+AR.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+' <span style="color:#888;font-weight:400">('+( emp?emp.dept:'')+')</span></div><div style="font-size:12px;color:#888">'+r.from_date+' &rarr; '+r.to_date+' &middot; '+r.days+' días</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button type="button" class="btn-e" style="font-size:11px" data-id="'+r.id+'" data-type="vac">Gestionar</button>':'')+'</div></div>';}).join('')+
-    '<h4 style="margin:1rem 0 8px;font-size:14px">Banco de Horas</h4>'+BH.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+r.horas+' horas &middot; '+r.fecha_uso+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button type="button" class="btn-e" style="font-size:11px" data-id="'+r.id+'" data-type="banco">Gestionar</button>':'')+'</div></div>';}).join('')+
-    '<h4 style="margin:1rem 0 8px;font-size:14px">Permisos</h4>'+PM.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+r.tipo+' &middot; '+r.tipo_goce+' &middot; '+r.fecha_desde+' al '+r.fecha_hasta+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button type="button" class="btn-e" style="font-size:11px" data-id="'+r.id+'" data-type="permiso">Gestionar</button>':'')+'</div></div>';}).join('');
+    '<h4 style="margin-bottom:8px;font-size:14px">Vacaciones</h4>'+AR.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+' <span style="color:#888;font-weight:400">('+( emp?emp.dept:'')+')</span></div><div style="font-size:12px;color:#888">'+r.from_date+' &rarr; '+r.to_date+' &middot; '+r.days+' días</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button type="button" class="btn-e" style="font-size:11px" data-id="'+r.id+'" data-type="vac">Gestionar</button>':'')+(CU.role==='admin'?'<button type="button" onclick="deleteReq(\'vac\','+r.id+')" style="background:#FCEBEB;color:#A32D2D;border:none;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">Eliminar</button>':'')+'</div></div>';}).join('')+
+    '<h4 style="margin:1rem 0 8px;font-size:14px">Banco de Horas</h4>'+BH.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+r.horas+' horas &middot; '+r.fecha_uso+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button type="button" class="btn-e" style="font-size:11px" data-id="'+r.id+'" data-type="banco">Gestionar</button>':'')+(CU.role==='admin'?'<button type="button" onclick="deleteReq(\'banco\','+r.id+')" style="background:#FCEBEB;color:#A32D2D;border:none;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">Eliminar</button>':'')+'</div></div>';}).join('')+
+    '<h4 style="margin:1rem 0 8px;font-size:14px">Permisos</h4>'+PM.map(function(r){var emp=AU.find(function(u){return u.id===r.user_id;});return'<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">'+(emp?emp.name:'')+'</div><div style="font-size:12px;color:#888">'+r.tipo+' &middot; '+r.tipo_goce+' &middot; '+r.fecha_desde+' al '+r.fecha_hasta+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+bH(r.status)+(r.status==='pending'?'<button type="button" class="btn-e" style="font-size:11px" data-id="'+r.id+'" data-type="permiso">Gestionar</button>':'')+(CU.role==='admin'?'<button type="button" onclick="deleteReq(\'permiso\','+r.id+')" style="background:#FCEBEB;color:#A32D2D;border:none;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">Eliminar</button>':'')+'</div></div>';}).join('');
   document.querySelectorAll('#adminAllReqs button[data-id]').forEach(function(b){b.addEventListener('click',function(){openModal(parseInt(b.dataset.id),b.dataset.type);});});
 }
 
@@ -1094,6 +1106,7 @@ function openEditModal(uid){
   document.getElementById('edit_user').value=u.user_name;
   document.getElementById('edit_pass').value='';
   document.getElementById('edit_dept').value=u.dept;
+  if(document.getElementById('edit_area'))document.getElementById('edit_area').value=u.area||'';
   document.getElementById('edit_email').value=u.email||'';
   document.getElementById('edit_role').value=u.role;
   document.getElementById('edit_used').value=u.used;
@@ -1105,7 +1118,7 @@ function openEditModal(uid){
   document.getElementById('edit_ingreso').value=u.fecha_ingreso||'';
   document.getElementById('edit_nacimiento').value=u.fecha_nacimiento||'';
   var bossSel=document.getElementById('edit_boss');
-  bossSel.innerHTML='<option value="">Sin jefe</option>'+AU.filter(function(x){return (x.role==='lider'||x.role==='boss'||x.role==='gerente'||x.role==='subdirector'||x.role==='admin')&&x.id!==uid;}).map(function(b){return'<option value="'+b.id+'"'+(u.boss===b.id?' selected':'')+'>'+b.name+'</option>';}).join('');
+  bossSel.innerHTML='<option value="">Sin jefe</option>'+AU.filter(function(x){return (x.role==='coordinador'||x.role==='lider'||x.role==='boss'||x.role==='gerente'||x.role==='subdirector'||x.role==='admin')&&x.id!==uid;}).map(function(b){return'<option value="'+b.id+'"'+(u.boss===b.id?' selected':'')+'>'+b.name+'</option>';}).join('');
   var prev=document.getElementById('edit_vac_preview');
   if(u.fecha_ingreso){var a=calcAnios(u.fecha_ingreso);var d=getDiasVac(a);prev.style.display='block';prev.innerHTML='Antigüedad: <strong>'+a+' año'+(a!==1?'s':'')+'</strong> &middot; Días: <strong>'+d+'</strong>';}
   else prev.style.display='none';
@@ -1117,6 +1130,7 @@ async function saveEditUser(){
   var id=parseInt(document.getElementById('edit_id').value);
   var name=document.getElementById('edit_name').value.trim(),uname=document.getElementById('edit_user').value.trim().toLowerCase();
   var pass=document.getElementById('edit_pass').value.trim(),dept=document.getElementById('edit_dept').value.trim();
+  var area=document.getElementById('edit_area')?document.getElementById('edit_area').value.trim():'';
   var email=document.getElementById('edit_email').value.trim(),role=document.getElementById('edit_role').value;
   var boss=document.getElementById('edit_boss').value,used=parseInt(document.getElementById('edit_used').value)||0;
   var horas=parseFloat(document.getElementById('edit_horas').value)||12,horasU=parseFloat(document.getElementById('edit_horasU').value)||0;
@@ -1126,7 +1140,7 @@ async function saveEditUser(){
   if(!name||!uname||!dept){msg.style.color='#A32D2D';msg.textContent='Completa los campos obligatorios.';msg.style.display='block';return;}
   var initials=name.split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
   var a=calcAnios(ingreso);var dc=getDiasVac(a);
-  var payload={name:name,user_name:uname,dept:dept,role:role,boss:boss?parseInt(boss):null,days:dc,used:used,avatar:initials,horas_banco:horas,horas_usadas:horasU,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,email:email,fecha_ingreso:ingreso,fecha_nacimiento:nacimiento};
+  var payload={name:name,user_name:uname,dept:dept,area:area,role:role,boss:boss?parseInt(boss):null,days:dc,used:used,avatar:initials,horas_banco:horas,horas_usadas:horasU,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,email:email,fecha_ingreso:ingreso,fecha_nacimiento:nacimiento};
   if(pass)payload.pass=pass;
   try{
     await sPatch('users','id=eq.'+id,payload);
@@ -1142,6 +1156,7 @@ async function confirmDelete(){if(!delT)return;try{await sDel('requests','user_i
 async function addUser(){
   var name=document.getElementById('nu_name').value.trim(),uname=document.getElementById('nu_user').value.trim().toLowerCase();
   var pass=document.getElementById('nu_pass').value.trim(),dept=document.getElementById('nu_dept').value.trim();
+  var area=document.getElementById('nu_area')?document.getElementById('nu_area').value.trim():'';
   var email=document.getElementById('nu_email').value.trim(),planta=document.getElementById('nu_planta').value;
   var role=document.getElementById('nu_role').value,boss=document.getElementById('nu_boss').value;
   var desc1=document.getElementById('nu_desc1').value,desc2=document.getElementById('nu_desc2').value;
@@ -1152,7 +1167,7 @@ async function addUser(){
   if(!name||!uname||!pass||!dept){msg.style.color='#A32D2D';msg.textContent='Completa todos los campos.';msg.style.display='block';return;}
   var initials=name.split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
   try{
-    await sPost('users',{name:name,user_name:uname,pass:pass,role:role,dept:dept,boss:boss?parseInt(boss):null,days:dc,used:used,avatar:initials,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,horas_banco:12,horas_usadas:0,email:email,fecha_ingreso:ingreso,fecha_nacimiento:nacimiento});
+    await sPost('users',{name:name,user_name:uname,pass:pass,role:role,dept:dept,area:area,boss:boss?parseInt(boss):null,days:dc,used:used,avatar:initials,planta:planta,dia_descanso:desc1,dia_descanso2:desc2,horas_banco:12,horas_usadas:0,email:email,fecha_ingreso:ingreso,fecha_nacimiento:nacimiento});
     msg.style.color='#3B6D11';msg.textContent='Usuario creado exitosamente.';msg.style.display='block';
     await loadAll();renderAdminUsers();buildNav();
   }catch(e){msg.style.color='#A32D2D';msg.textContent='Error. El usuario puede ya existir.';msg.style.display='block';}
@@ -1251,7 +1266,50 @@ document.getElementById('pParentesco').addEventListener('change', checkParentesc
 document.getElementById('fFrom').addEventListener('change', applyFilters);
 document.getElementById('fTo').addEventListener('change', applyFilters);
 document.getElementById('fPlanta').addEventListener('change', applyFilters);
+
+// ── SEED USUARIOS INICIALES ──
+async function seedInitialData(){
+  // Limpiar todas las solicitudes
+  await sDel('requests','id=gt.0');
+  await sDel('banco_horas','id=gt.0');
+  await sDel('permisos','id=gt.0');
+
+  // Usuarios de la imagen (depto: Administración Productiva)
+  var seedUsers=[
+    {name:'Sergio España',          user_name:'sergio.espana',         pass:'adminprod123',role:'boss',        dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2009-09-21',used:0,  avatar:'SE'},
+    {name:'Jesus Carlos Almanza',   user_name:'jesus.almanza',          pass:'adminprod123',role:'coordinador', dept:'Administración Productiva',area:'MP', planta:'Zubex Planta',fecha_ingreso:'2012-03-14',used:3,  avatar:'JA'},
+    {name:'Jose Juan Betancourt',   user_name:'jose.betancourt',        pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'MP', planta:'Zubex Planta',fecha_ingreso:'2016-04-25',used:9,  avatar:'JB'},
+    {name:'Felix Sanchez',          user_name:'felix.sanchez',          pass:'adminprod123',role:'coordinador', dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2017-07-03',used:4,  avatar:'FS'},
+    {name:'Fabian Lopez',           user_name:'fabian.lopez',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2019-12-16',used:10, avatar:'FL'},
+    {name:'Leonardo Meza',          user_name:'leonardo.meza',          pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2022-08-06',used:0,  avatar:'LM'},
+    {name:'Jose Tircareño',         user_name:'jose.tircareno',         pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2022-09-12',used:7.5,avatar:'JT'},
+    {name:'Roberto Cruz',           user_name:'roberto.cruz',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2023-01-03',used:7,  avatar:'RC'},
+    {name:'Jose Alamillo',          user_name:'jose.alamillo',          pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'MP', planta:'Zubex Planta',fecha_ingreso:'2023-01-30',used:7,  avatar:'JA'},
+    {name:'Pablo Cortez',           user_name:'pablo.cortez',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2025-08-18',used:0,  avatar:'PC'},
+    {name:'Juan Quevedo',           user_name:'juan.quevedo',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2025-09-08',used:0,  avatar:'JQ'},
+    {name:'Edgar Valdez',           user_name:'edgar.valdez',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'MP', planta:'Zubex Planta',fecha_ingreso:'2025-10-01',used:6,  avatar:'EV'},
+  ];
+
+  for(var i=0;i<seedUsers.length;i++){
+    var u=seedUsers[i];
+    var a=calcAnios(u.fecha_ingreso);var dc=getDiasVac(a);
+    try{
+      await sPost('users',{
+        name:u.name,user_name:u.user_name,pass:u.pass,role:u.role,
+        dept:u.dept,area:u.area,planta:u.planta,
+        fecha_ingreso:u.fecha_ingreso,
+        days:dc,used:u.used,
+        avatar:u.avatar,
+        horas_banco:12,horas_usadas:0,
+        dia_descanso:'0',dia_descanso2:''
+      });
+    }catch(e){console.warn('Usuario ya existe o error:',u.user_name,e);}
+  }
+  alert('Datos iniciales cargados. Recarga la página.');
+}
+
 document.getElementById('fDept').addEventListener('change', applyFilters);
+var fAreaEl=document.getElementById('fArea');if(fAreaEl)fAreaEl.addEventListener('change',applyFilters);
 document.getElementById('fEmp').addEventListener('change', applyFilters);
 document.getElementById('fStatus').addEventListener('change', applyFilters);
 
