@@ -1269,43 +1269,86 @@ document.getElementById('fPlanta').addEventListener('change', applyFilters);
 
 // ── SEED USUARIOS INICIALES ──
 async function seedInitialData(){
-  // Limpiar todas las solicitudes
-  await sDel('requests','id=gt.0');
-  await sDel('banco_horas','id=gt.0');
-  await sDel('permisos','id=gt.0');
-
-  // Usuarios de la imagen (depto: Administración Productiva)
-  var seedUsers=[
-    {name:'Sergio España',          user_name:'sergio.espana',         pass:'adminprod123',role:'boss',        dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2009-09-21',used:0,  avatar:'SE'},
-    {name:'Jesus Carlos Almanza',   user_name:'jesus.almanza',          pass:'adminprod123',role:'coordinador', dept:'Administración Productiva',area:'MP', planta:'Zubex Planta',fecha_ingreso:'2012-03-14',used:3,  avatar:'JA'},
-    {name:'Jose Juan Betancourt',   user_name:'jose.betancourt',        pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'MP', planta:'Zubex Planta',fecha_ingreso:'2016-04-25',used:9,  avatar:'JB'},
-    {name:'Felix Sanchez',          user_name:'felix.sanchez',          pass:'adminprod123',role:'coordinador', dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2017-07-03',used:4,  avatar:'FS'},
-    {name:'Fabian Lopez',           user_name:'fabian.lopez',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2019-12-16',used:10, avatar:'FL'},
-    {name:'Leonardo Meza',          user_name:'leonardo.meza',          pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2022-08-06',used:0,  avatar:'LM'},
-    {name:'Jose Tircareño',         user_name:'jose.tircareno',         pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2022-09-12',used:7.5,avatar:'JT'},
-    {name:'Roberto Cruz',           user_name:'roberto.cruz',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2023-01-03',used:7,  avatar:'RC'},
-    {name:'Jose Alamillo',          user_name:'jose.alamillo',          pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'MP', planta:'Zubex Planta',fecha_ingreso:'2023-01-30',used:7,  avatar:'JA'},
-    {name:'Pablo Cortez',           user_name:'pablo.cortez',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2025-08-18',used:0,  avatar:'PC'},
-    {name:'Juan Quevedo',           user_name:'juan.quevedo',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'REF',planta:'Zubex Planta',fecha_ingreso:'2025-09-08',used:0,  avatar:'JQ'},
-    {name:'Edgar Valdez',           user_name:'edgar.valdez',           pass:'adminprod123',role:'employee',    dept:'Administración Productiva',area:'MP', planta:'Zubex Planta',fecha_ingreso:'2025-10-01',used:6,  avatar:'EV'},
-  ];
-
-  for(var i=0;i<seedUsers.length;i++){
-    var u=seedUsers[i];
-    var a=calcAnios(u.fecha_ingreso);var dc=getDiasVac(a);
-    try{
-      await sPost('users',{
-        name:u.name,user_name:u.user_name,pass:u.pass,role:u.role,
-        dept:u.dept,area:u.area,planta:u.planta,
-        fecha_ingreso:u.fecha_ingreso,
-        days:dc,used:u.used,
-        avatar:u.avatar,
-        horas_banco:12,horas_usadas:0,
-        dia_descanso:'0',dia_descanso2:''
-      });
-    }catch(e){console.warn('Usuario ya existe o error:',u.user_name,e);}
+  if(!confirm('Esto borrará TODAS las solicitudes existentes y creará los usuarios de la lista. ¿Continuar?'))return;
+  
+  var msg='Limpiando solicitudes...';
+  try{
+    // 1. Borrar todas las solicitudes
+    await fetch(SB+'/rest/v1/requests?id=gte.0',{method:'DELETE',headers:sbH()});
+    await fetch(SB+'/rest/v1/banco_horas?id=gte.0',{method:'DELETE',headers:sbH()});
+    await fetch(SB+'/rest/v1/permisos?id=gte.0',{method:'DELETE',headers:sbH()});
+    
+    // 2. Calcular días según antigüedad (misma lógica que getDiasVac)
+    function calcFecha(f){if(!f)return 0;var d=new Date(f),n=new Date();var a=n.getFullYear()-d.getFullYear();if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate()))a--;return a<0?0:a;}
+    
+    // Datos de la imagen
+    // nombre, usuario, area, puesto/role, fecha_ingreso, used (días ya usados = días_asignados - saldo)
+    // Saldo = Saldo del año (col P/O) - Disfrutadas 2026
+    // used = días_correspondientes - saldo_final
+    var seedUsers=[
+      // Sergio España: REF, Jefe, ingreso sep-2009, saldo_del_año=17, disfrutadas=0 → used=0
+      {name:'Sergio España',           uname:'sergio.espana',          area:'REF', role:'boss',        ingreso:'2009-09-21', used:0},
+      // Jesus Carlos Almanza: MP, Coordinador, ingreso mar-2012, saldo=11, días_corr=14 → used=3
+      {name:'Jesus Carlos Almanza',    uname:'jesus.almanza',          area:'MP',  role:'coordinador', ingreso:'2012-03-14', used:3},
+      // Jose Juan Betancourt: MP, operador, ingreso abr-2016, saldo=3, días_corr=12 → used=9
+      {name:'Jose Juan Betancourt',    uname:'jose.betancourt',        area:'MP',  role:'employee',    ingreso:'2016-04-25', used:9},
+      // Felix Sanchez: REF, Coordinador, ingreso jul-2017, saldo=5, días_corr=9→12? used=4
+      {name:'Felix Sanchez',           uname:'felix.sanchez',          area:'REF', role:'coordinador', ingreso:'2017-07-03', used:4},
+      // Fabian Lopez: REF, operador, ingreso dic-2019, saldo=11, días_corr=15? used=10 (aprox por imagen col P=21 - saldo=11)
+      {name:'Fabian Lopez',            uname:'fabian.lopez',           area:'REF', role:'employee',    ingreso:'2019-12-16', used:10},
+      // Leonardo Meza: REF, operador, ingreso ago-2022, saldo=6, used=0
+      {name:'Leonardo Meza',           uname:'leonardo.meza',          area:'REF', role:'employee',    ingreso:'2022-08-06', used:0},
+      // Jose Tircareño: REF, operador, ingreso sep-2022, saldo=0.5, días_corr=8 → used=7.5
+      {name:'Jose Tircareño',          uname:'jose.tircareno',         area:'REF', role:'employee',    ingreso:'2022-09-12', used:7.5},
+      // Roberto Cruz: REF, operador, ingreso ene-2023, saldo=11, días_corr=18? (imagen col O=15) used=4
+      {name:'Roberto Cruz',            uname:'roberto.cruz',           area:'REF', role:'employee',    ingreso:'2023-01-03', used:4},
+      // Jose Alamillo: MP, operador, ingreso ene-2023, saldo=11, used=4
+      {name:'Jose Alamillo',           uname:'jose.alamillo',          area:'MP',  role:'employee',    ingreso:'2023-01-30', used:4},
+      // Pablo Cortez: REF, operador, ingreso ago-2025, saldo=0, used=0
+      {name:'Pablo Cortez',            uname:'pablo.cortez',           area:'REF', role:'employee',    ingreso:'2025-08-18', used:0},
+      // Juan Quevedo: REF, operador, ingreso sep-2025, saldo=0, used=0
+      {name:'Juan Quevedo',            uname:'juan.quevedo',           area:'REF', role:'employee',    ingreso:'2025-09-08', used:0},
+      // Edgar Valdez: MP, operador, ingreso oct-2025, saldo=-6 (negativo), used=6 (se pasó)
+      {name:'Edgar Valdez',            uname:'edgar.valdez',           area:'MP',  role:'employee',    ingreso:'2025-10-01', used:6},
+    ];
+    
+    var ok=0,skip=0;
+    for(var i=0;i<seedUsers.length;i++){
+      var u=seedUsers[i];
+      var a=calcFecha(u.ingreso);
+      var dc=getDiasVac(a);
+      var initials=u.name.split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase();
+      try{
+        var res=await sPost('users',{
+          name:u.name,
+          user_name:u.uname,
+          pass:'adminprod123',
+          role:u.role,
+          dept:'Administración Productiva',
+          area:u.area,
+          planta:'Zubex Planta',
+          fecha_ingreso:u.ingreso,
+          days:dc,
+          used:u.used,
+          avatar:initials,
+          horas_banco:12,
+          horas_usadas:0,
+          dia_descanso:'0',
+          dia_descanso2:''
+        });
+        if(res&&res[0]&&res[0].id)ok++;
+        else skip++;
+      }catch(e){skip++;}
+    }
+    
+    await loadAll();
+    renderAdminUsers();
+    buildNav();
+    alert('Solicitudes borradas. Usuarios creados: '+ok+(skip>0?'. Omitidos: '+skip:'')+'.');
+    
+  }catch(e){
+    alert('Error durante la carga: '+e.message);
   }
-  alert('Datos iniciales cargados. Recarga la página.');
 }
 
 document.getElementById('fDept').addEventListener('change', applyFilters);
